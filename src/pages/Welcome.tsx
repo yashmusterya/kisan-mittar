@@ -6,11 +6,12 @@
 import { CloudRain, Users, Sprout } from 'lucide-react';
 import logo from '@/assets/logo.png';
  
- const languages: { code: Language; name: string; native: string }[] = [
-   { code: 'en', name: 'English', native: 'English' },
-   { code: 'hi', name: 'Hindi', native: 'हिंदी' },
-   { code: 'mr', name: 'Marathi', native: 'मराठी' },
- ];
+const languages: { code: Language; name: string; native: string }[] = [
+  { code: 'en', name: 'English', native: 'English' },
+  { code: 'hi', name: 'Hindi', native: 'हिंदी' },
+  { code: 'mr', name: 'Marathi', native: 'मराठी' },
+  { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+];
  
  const Welcome = () => {
    const navigate = useNavigate();

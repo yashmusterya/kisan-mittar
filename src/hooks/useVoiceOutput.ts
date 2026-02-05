@@ -24,6 +24,7 @@ const langCodes: Record<string, string> = {
   en: 'en-IN',
   hi: 'hi-IN',
   mr: 'mr-IN',
+  kn: 'kn-IN',
 };
 
 export const useVoiceOutput = (options: UseVoiceOutputOptions = {}): UseVoiceOutputReturn => {

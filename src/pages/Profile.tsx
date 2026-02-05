@@ -72,31 +72,31 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
     );
   };
 
-   const handleSave = async () => {
-     if (!profile) return;
-     
-     setLoading(true);
-     const { error } = await supabase
-       .from('profiles')
-       .update({
-         full_name: formData.full_name,
-         location: formData.location,
-         primary_crop: formData.primary_crop,
+  const handleSave = async () => {
+    if (!profile) return;
+    
+    setLoading(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: formData.full_name,
+        location: formData.location,
+        primary_crop: formData.primary_crop,
         latitude: formData.latitude,
         longitude: formData.longitude,
-         language,
-       })
-       .eq('id', profile.id);
- 
-     if (error) {
-       toast.error('Failed to update profile');
-     } else {
-       toast.success(language === 'en' ? 'Profile updated!' : language === 'hi' ? 'प्रोफ़ाइल अपडेट हुई!' : 'प्रोफाइल अपडेट झाले!');
-       await refreshProfile();
-       setEditing(false);
-     }
-     setLoading(false);
-   };
+        language: language as 'en' | 'hi' | 'mr',
+      })
+      .eq('id', profile.id);
+
+    if (error) {
+      toast.error('Failed to update profile');
+    } else {
+      toast.success(language === 'en' ? 'Profile updated!' : language === 'hi' ? 'प्रोफ़ाइल अपडेट हुई!' : language === 'mr' ? 'प्रोफाइल अपडेट झाले!' : 'ಪ್ರೊಫೈಲ್ ನವೀಕರಿಸಲಾಗಿದೆ!');
+      await refreshProfile();
+      setEditing(false);
+    }
+    setLoading(false);
+  };
  
    const handleLogout = async () => {
      await signOut();
