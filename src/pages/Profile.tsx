@@ -84,7 +84,7 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
         primary_crop: formData.primary_crop,
         latitude: formData.latitude,
         longitude: formData.longitude,
-        language: language as 'en' | 'hi' | 'mr',
+        language: language as 'en' | 'hi' | 'mr' | 'kn',
       })
       .eq('id', profile.id);
 
@@ -103,11 +103,12 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
      navigate('/');
    };
  
-   const languages: { code: Language; native: string }[] = [
-     { code: 'en', native: 'English' },
-     { code: 'hi', native: 'हिंदी' },
-     { code: 'mr', native: 'मराठी' },
-   ];
+  const languages: { code: Language; native: string }[] = [
+    { code: 'en', native: 'English' },
+    { code: 'hi', native: 'हिंदी' },
+    { code: 'mr', native: 'मराठी' },
+    { code: 'kn', native: 'ಕನ್ನಡ' },
+  ];
  
    return (
      <div className="p-4 space-y-4">
@@ -119,11 +120,11 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
        {/* Profile Card */}
        <Card>
          <CardHeader>
-           <CardTitle className="flex items-center gap-2">
-             <User className="w-5 h-5 text-primary" />
-             {editing 
-               ? (language === 'en' ? 'Edit Profile' : language === 'hi' ? 'प्रोफ़ाइल संपादित करें' : 'प्रोफाइल संपादित करा')
-               : (language === 'en' ? 'My Profile' : language === 'hi' ? 'मेरी प्रोफ़ाइल' : 'माझी प्रोफाइल')
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              {editing 
+                ? (language === 'en' ? 'Edit Profile' : language === 'hi' ? 'प्रोफ़ाइल संपादित करें' : language === 'mr' ? 'प्रोफाइल संपादित करा' : 'ಪ್ರೊಫೈಲ್ ಸಂಪಾದಿಸಿ')
+               : (language === 'en' ? 'My Profile' : language === 'hi' ? 'मेरी प्रोफ़ाइल' : language === 'mr' ? 'माझी प्रोफाइल' : 'ನನ್ನ ಪ್ರೊಫೈಲ್')
              }
            </CardTitle>
          </CardHeader>
@@ -161,11 +162,12 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
                       )}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'en' ? 'Tap the button to detect your location automatically' :
-                     language === 'hi' ? 'अपना स्थान स्वचालित रूप से पता लगाने के लिए बटन दबाएं' :
-                     'तुमचे स्थान स्वयंचलितपणे शोधण्यासाठी बटण दाबा'}
-                  </p>
+                   <p className="text-xs text-muted-foreground">
+                     {language === 'en' ? 'Tap the button to detect your location automatically' :
+                      language === 'hi' ? 'अपना स्थान स्वचालित रूप से पता लगाने के लिए बटन दबाएं' :
+                      language === 'mr' ? 'तुमचे स्थान स्वयंचलितपणे शोधण्यासाठी बटण दाबा' :
+                      'ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಪತ್ತೆ ಮಾಡಲು ಬಟನ್ ಒತ್ತಿ'}
+                   </p>
                </div>
                <div className="space-y-2">
                  <Label htmlFor="crop">{t('auth.primaryCrop')}</Label>
@@ -178,10 +180,10 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
                <div className="flex gap-2">
                  <Button onClick={handleSave} disabled={loading} className="flex-1">
                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                   {language === 'en' ? 'Save' : language === 'hi' ? 'सेव करें' : 'जतन करा'}
+                   {language === 'en' ? 'Save' : language === 'hi' ? 'सेव करें' : language === 'mr' ? 'जतन करा' : 'ಉಳಿಸಿ'}
                  </Button>
                  <Button variant="outline" onClick={() => setEditing(false)} className="flex-1">
-                   {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : 'रद्द करा'}
+                   {language === 'en' ? 'Cancel' : language === 'hi' ? 'रद्द करें' : language === 'mr' ? 'रद्द करा' : 'ರದ್ದುಮಾಡಿ'}
                  </Button>
                </div>
              </>
@@ -215,8 +217,8 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
                  </div>
                )}
                
-               <Button variant="outline" onClick={() => setEditing(true)} className="w-full">
-                 {language === 'en' ? 'Edit Profile' : language === 'hi' ? 'प्रोफ़ाइल संपादित करें' : 'प्रोफाइल संपादित करा'}
+                <Button variant="outline" onClick={() => setEditing(true)} className="w-full">
+                  {language === 'en' ? 'Edit Profile' : language === 'hi' ? 'प्रोफ़ाइल संपादित करें' : language === 'mr' ? 'प्रोफाइल संपादित करा' : 'ಪ್ರೊಫೈಲ್ ಸಂಪಾದಿಸಿ'}
                </Button>
              </>
            )}
@@ -228,7 +230,7 @@ import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide
          <CardHeader>
            <CardTitle className="flex items-center gap-2">
              <Globe className="w-5 h-5 text-primary" />
-             {language === 'en' ? 'Language' : language === 'hi' ? 'भाषा' : 'भाषा'}
+             {language === 'en' ? 'Language' : language === 'hi' ? 'भाषा' : language === 'mr' ? 'भाषा' : 'ಭಾಷೆ'}
            </CardTitle>
          </CardHeader>
          <CardContent>
