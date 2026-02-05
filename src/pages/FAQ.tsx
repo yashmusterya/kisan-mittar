@@ -129,6 +129,104 @@ const mockFAQs: FAQItem[] = [
       mr: 'रासायनिक खते आणि कीटकनाशके थांबवून सुरुवात करा. शेणखत, कंपोस्ट आणि जीवामृत वापरा. पिकांची फेरपालट करा. चांगल्या बाजारभावासाठी 3 वर्षे रसायनमुक्त शेती केल्यानंतर सेंद्रिय प्रमाणीकरणासाठी (NPOP/PGS) अर्ज करा.',
     },
   },
+  {
+    id: '9',
+    category: 'pests',
+    question: {
+      en: 'How to protect crops from locusts?',
+      hi: 'टिड्डियों से फसल कैसे बचाएं?',
+      mr: 'टोळांपासून पिके कशी वाचवावीत?',
+    },
+    answer: {
+      en: 'For locust control: 1) Report sightings to district agriculture officer immediately. 2) Create loud noises (drums, tractors) to scare them. 3) Spray Malathion 96% ULV (1.25 liters/hectare) in early morning. 4) Dig trenches to trap hoppers. 5) Follow government advisories.',
+      hi: 'टिड्डी नियंत्रण: 1) जिला कृषि अधिकारी को तुरंत सूचित करें। 2) डराने के लिए शोर करें (ढोल, ट्रैक्टर)। 3) सुबह जल्दी मैलाथियान 96% ULV (1.25 लीटर/हेक्टेयर) स्प्रे करें। 4) हॉपर्स को फंसाने के लिए खाई खोदें। 5) सरकारी सलाह का पालन करें।',
+      mr: 'टोळ नियंत्रण: 1) जिल्हा कृषी अधिकाऱ्यांना तात्काळ कळवा. 2) घाबरवण्यासाठी आवाज करा (ढोल, ट्रॅक्टर). 3) सकाळी लवकर मॅलाथियॉन 96% ULV (1.25 लिटर/हेक्टर) फवारणी करा. 4) हॉपर्स अडकवण्यासाठी खंदक खणा. 5) सरकारी सूचनांचे पालन करा.',
+    },
+  },
+  {
+    id: '10',
+    category: 'crops',
+    question: {
+      en: 'What is the ideal spacing for tomato plants?',
+      hi: 'टमाटर के पौधों के लिए आदर्श दूरी क्या है?',
+      mr: 'टोमॅटोच्या रोपांसाठी आदर्श अंतर किती आहे?',
+    },
+    answer: {
+      en: 'For tomatoes: Row spacing 60-75 cm, plant spacing 45-60 cm. This allows good air circulation and reduces disease. Use stakes or cages for support. Prune lower leaves for better yield.',
+      hi: 'टमाटर के लिए: कतार की दूरी 60-75 सेमी, पौधों की दूरी 45-60 सेमी। इससे अच्छा वायु संचार होता है और बीमारी कम होती है। सहारे के लिए डंडे या पिंजरे का उपयोग करें। बेहतर उपज के लिए निचली पत्तियां काटें।',
+      mr: 'टोमॅटोसाठी: ओळींचे अंतर 60-75 सेमी, रोपांचे अंतर 45-60 सेमी. यामुळे चांगले हवा संचलन होते आणि रोग कमी होतात. आधारासाठी काठ्या किंवा पिंजरे वापरा. चांगल्या उत्पादनासाठी खालची पाने छाटा.',
+    },
+  },
+  {
+    id: '11',
+    category: 'water',
+    question: {
+      en: 'How to check if my crop needs water?',
+      hi: 'कैसे पता करें कि फसल को पानी चाहिए?',
+      mr: 'माझ्या पिकाला पाणी लागते हे कसे तपासावे?',
+    },
+    answer: {
+      en: 'Simple tests: 1) Finger test - insert finger 2 inches in soil, if dry, irrigate. 2) Leaf wilting - if leaves droop in morning, water immediately. 3) Soil color - dry soil is lighter. 4) Footprint test - if footprint stays, soil is too dry.',
+      hi: 'सरल परीक्षण: 1) उंगली परीक्षण - मिट्टी में 2 इंच उंगली डालें, सूखी हो तो सिंचाई करें। 2) पत्ती मुरझाना - अगर सुबह पत्तियां झुकी हों, तुरंत पानी दें। 3) मिट्टी का रंग - सूखी मिट्टी हल्की होती है। 4) पैर का निशान - अगर निशान रहे, मिट्टी बहुत सूखी है।',
+      mr: 'साधी चाचणी: 1) बोट चाचणी - मातीत 2 इंच बोट घाला, कोरडी असल्यास पाणी द्या. 2) पान कोमेजणे - सकाळी पाने लोंबत असल्यास लगेच पाणी द्या. 3) मातीचा रंग - कोरडी माती फिकट असते. 4) पायाचा ठसा - ठसा राहिल्यास माती खूप कोरडी आहे.',
+    },
+  },
+  {
+    id: '12',
+    category: 'seasons',
+    question: {
+      en: 'What are Kharif crops and when to sow them?',
+      hi: 'खरीफ फसलें क्या हैं और कब बोएं?',
+      mr: 'खरीप पिके कोणती आणि कधी पेरावीत?',
+    },
+    answer: {
+      en: 'Kharif crops (June-October): Rice, Maize, Sorghum (Jowar), Pearl millet (Bajra), Groundnut, Soybean, Cotton, Sugarcane. Sow with onset of monsoon (June-July). These need warm, wet conditions.',
+      hi: 'खरीफ फसलें (जून-अक्टूबर): धान, मक्का, ज्वार, बाजरा, मूंगफली, सोयाबीन, कपास, गन्ना। मानसून की शुरुआत (जून-जुलाई) में बोएं। इन्हें गर्म, नम मौसम चाहिए।',
+      mr: 'खरीप पिके (जून-ऑक्टोबर): तांदूळ, मका, ज्वारी, बाजरी, भुईमूग, सोयाबीन, कापूस, ऊस. मान्सूनच्या सुरुवातीला (जून-जुलै) पेरा. यांना उबदार, ओलसर हवामान लागते.',
+    },
+  },
+  {
+    id: '13',
+    category: 'pests',
+    question: {
+      en: 'How to control stem borer in rice?',
+      hi: 'धान में तना छेदक को कैसे नियंत्रित करें?',
+      mr: 'भातामधील खोडकिडा कसा नियंत्रित करावा?',
+    },
+    answer: {
+      en: 'Stem borer control: 1) Use resistant varieties like Swarna, MTU 1010. 2) Install pheromone traps (5/acre). 3) Release Trichogramma parasitoids. 4) Apply Carbofuran 3G granules in whorl. 5) Harvest at ground level to destroy pupae.',
+      hi: 'तना छेदक नियंत्रण: 1) प्रतिरोधी किस्में जैसे स्वर्णा, MTU 1010 उपयोग करें। 2) फेरोमोन ट्रैप लगाएं (5/एकड़)। 3) ट्राइकोग्रामा परजीवी छोड़ें। 4) पौधे के गोभ में कार्बोफ्यूरान 3G दाने डालें। 5) प्यूपा नष्ट करने के लिए जमीन से काटें।',
+      mr: 'खोडकिडा नियंत्रण: 1) प्रतिरोधक वाण वापरा जसे स्वर्णा, MTU 1010. 2) फेरोमोन सापळे लावा (5/एकर). 3) ट्रायकोग्रामा परजीवी सोडा. 4) पोंग्यात कार्बोफ्युरान 3G दाणे टाका. 5) कोषावस्था नष्ट करण्यासाठी जमिनीलगत कापणी करा.',
+    },
+  },
+  {
+    id: '14',
+    category: 'soil',
+    question: {
+      en: 'How to improve acidic soil?',
+      hi: 'अम्लीय मिट्टी कैसे सुधारें?',
+      mr: 'आम्लयुक्त माती कशी सुधारावी?',
+    },
+    answer: {
+      en: 'To reduce soil acidity: 1) Apply agricultural lime (2-4 tonnes/hectare based on pH). 2) Add wood ash. 3) Use organic matter like compost. 4) Avoid ammonium-based fertilizers. 5) Grow acid-tolerant crops initially.',
+      hi: 'मिट्टी की अम्लता कम करने के लिए: 1) कृषि चूना डालें (pH के अनुसार 2-4 टन/हेक्टेयर)। 2) लकड़ी की राख डालें। 3) कंपोस्ट जैसे जैविक पदार्थ उपयोग करें। 4) अमोनियम आधारित उर्वरक से बचें। 5) शुरू में अम्ल-सहनशील फसलें उगाएं।',
+      mr: 'मातीची आम्लता कमी करण्यासाठी: 1) शेती चुना टाका (pH नुसार 2-4 टन/हेक्टर). 2) लाकडाची राख टाका. 3) कंपोस्टसारखे सेंद्रिय पदार्थ वापरा. 4) अमोनियम आधारित खते टाळा. 5) सुरुवातीला आम्ल-सहनशील पिके घ्या.',
+    },
+  },
+  {
+    id: '15',
+    category: 'water',
+    question: {
+      en: 'What is micro-irrigation and its benefits?',
+      hi: 'सूक्ष्म सिंचाई क्या है और इसके लाभ?',
+      mr: 'सूक्ष्म सिंचन म्हणजे काय आणि त्याचे फायदे?',
+    },
+    answer: {
+      en: 'Micro-irrigation (drip/sprinkler) delivers water directly to roots. Benefits: 30-50% water savings, 20-30% yield increase, less weeds, fertilizer savings through fertigation. Government subsidies available (50-90% for small farmers).',
+      hi: 'सूक्ष्म सिंचाई (ड्रिप/स्प्रिंकलर) सीधे जड़ों तक पानी पहुंचाती है। लाभ: 30-50% पानी बचत, 20-30% उपज वृद्धि, कम खरपतवार, फर्टिगेशन से उर्वरक बचत। सरकारी सब्सिडी उपलब्ध (छोटे किसानों के लिए 50-90%)।',
+      mr: 'सूक्ष्म सिंचन (ठिबक/तुषार) थेट मुळांपर्यंत पाणी पोहोचवते. फायदे: 30-50% पाणी बचत, 20-30% उत्पादन वाढ, कमी तण, फर्टिगेशनमुळे खत बचत. सरकारी अनुदान उपलब्ध (छोट्या शेतकऱ्यांसाठी 50-90%).',
+    },
+  },
 ];
 
 const categories: { key: Category; icon: React.ElementType }[] = [

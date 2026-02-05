@@ -53,14 +53,14 @@
  
  Important: You are an AI assistant. For critical decisions about expensive inputs or serious crop diseases, always advise farmers to consult local experts.`;
  
-     const response = await fetch('https://api.lovable.dev/v1/chat/completions', {
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
        method: 'POST',
        headers: {
          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
          'Content-Type': 'application/json',
        },
        body: JSON.stringify({
-         model: 'google/gemini-2.5-flash',
+          model: 'google/gemini-3-flash-preview',
          messages: [
            { role: 'system', content: systemPrompt },
            { role: 'user', content: message },
@@ -70,7 +70,19 @@
        }),
      });
  
-     if (!response.ok) {
+      if (!response.ok) {
+        if (response.status === 429) {
+          return new Response(
+            JSON.stringify({ error: 'Rate limit exceeded. Please try again later.', response: 'Too many requests. Please wait a moment.' }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        if (response.status === 402) {
+          return new Response(
+            JSON.stringify({ error: 'Payment required.', response: 'AI service temporarily unavailable.' }),
+            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
        const errorText = await response.text();
        console.error('AI API error:', errorText);
        throw new Error(`AI API error: ${response.status}`);
