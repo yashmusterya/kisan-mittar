@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { message, language, context } = await req.json();
+    const { message, language, context, image } = await req.json();
 
     if (!message) {
       return new Response(
@@ -94,6 +94,7 @@ Deno.serve(async (req) => {
       en: 'Respond in English. Use simple, farmer-friendly language.',
       hi: 'Respond in Hindi (हिंदी). Use simple language that Indian farmers understand. Use Devanagari script.',
       mr: 'Respond in Marathi (मराठी). Use simple language that Maharashtrian farmers understand. Use Devanagari script.',
+      kn: 'Respond in Kannada (ಕನ್ನಡ). Use simple language that Karnataka farmers understand. Use Kannada script.',
     };
 
     const systemPrompt = `You are KisaanMitra, an AI agricultural assistant for Indian farmers. 
@@ -107,6 +108,14 @@ Your role:
 - Be encouraging and supportive
 - Know about government schemes: PM-KISAN, PMFBY, PMKSY, Soil Health Card, NFSM
 - Recommend relevant farming products when appropriate
+
+IMAGE ANALYSIS (when image is provided):
+- Carefully analyze any crop/plant images for disease symptoms
+- Identify the crop type if visible
+- Look for signs of: fungal infection, bacterial infection, viral infection, nutrient deficiency, pest damage, water stress
+- Provide specific diagnosis with confidence level
+- Suggest immediate treatment and preventive measures
+- Recommend products available in the shop if relevant
 
 Response style:
 - Keep responses concise but complete (max 200 words unless detailed explanation is needed)
@@ -124,7 +133,7 @@ IMPORTANT SECURITY RULES:
 - For critical decisions about expensive inputs or serious crop diseases, always advise farmers to consult local experts`;
 
     // Build messages with context
-    const messages = [
+    const messages: any[] = [
       { role: 'system', content: systemPrompt },
     ];
 
@@ -137,7 +146,27 @@ IMPORTANT SECURITY RULES:
       messages.push(...sanitizedContext);
     }
 
-    messages.push({ role: 'user', content: sanitizedMessage });
+    // Handle image if provided
+    if (image && image.base64 && image.mimeType) {
+      // Multimodal message with image
+      messages.push({
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: sanitizedMessage || 'Please analyze this crop image and identify any diseases, pests, or problems. Provide diagnosis and treatment recommendations.',
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:${image.mimeType};base64,${image.base64}`,
+            },
+          },
+        ],
+      });
+    } else {
+      messages.push({ role: 'user', content: sanitizedMessage });
+    }
 
     const startTime = Date.now();
 
@@ -148,7 +177,7 @@ IMPORTANT SECURITY RULES:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'google/gemini-2.5-flash',
         messages,
         max_tokens: 1024,
         temperature: 0.7,

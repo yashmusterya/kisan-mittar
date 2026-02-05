@@ -5,9 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, ImagePlus, Loader2, Sprout, User, AlertCircle, Volume2, VolumeX } from 'lucide-react';
+import { Send, Loader2, Sprout, User, AlertCircle, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
 import VoiceButton from '@/components/voice/VoiceButton';
+import ImageUpload from '@/components/chat/ImageUpload';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useVoiceOutput } from '@/hooks/useVoiceOutput';
 
@@ -33,6 +34,7 @@ const Chat = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Voice hooks
@@ -53,6 +55,9 @@ const Chat = () => {
 
   // Cache helpers
   const getCachedResponse = (question: string): string | null => {
+    // Don't use cache if image is attached
+    if (selectedImage?.base64) return null;
+    
     try {
       const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
       const key = `${language}:${question.toLowerCase().trim()}`;
@@ -68,6 +73,9 @@ const Chat = () => {
   };
 
   const setCachedResponse = (question: string, response: string) => {
+    // Don't cache responses that had images
+    if (selectedImage?.base64) return;
+    
     try {
       const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
       const key = `${language}:${question.toLowerCase().trim()}`;
@@ -104,40 +112,71 @@ const Chat = () => {
     }
   }, [isListening, transcript]);
 
+  const handleImageSelect = (base64: string, mimeType: string) => {
+    if (base64 && mimeType) {
+      setSelectedImage({ base64, mimeType });
+    } else {
+      setSelectedImage(null);
+    }
+  };
+
   const handleSend = async (messageToSend?: string) => {
     const userMessage = (messageToSend || input).trim();
-    if (!userMessage || loading) return;
+    if ((!userMessage && !selectedImage) || loading) return;
 
+    const currentImage = selectedImage;
     setInput('');
+    setSelectedImage(null);
     setLoading(true);
     stopSpeaking(); // Stop any ongoing speech
 
     // Add user message to UI immediately (optimistic update)
     const userMsgId = Date.now().toString();
-    setMessages((prev) => [...prev, { id: userMsgId, role: 'user', content: userMessage }]);
+    const displayMessage = currentImage 
+      ? (userMessage || t('chat.uploadImage'))
+      : userMessage;
+    
+    setMessages((prev) => [...prev, { 
+      id: userMsgId, 
+      role: 'user', 
+      content: displayMessage,
+      image_url: currentImage ? `data:${currentImage.mimeType};base64,${currentImage.base64}` : undefined
+    }]);
 
-    // Check cache first
-    const cachedResponse = getCachedResponse(userMessage);
-    if (cachedResponse) {
-      const aiMsgId = (Date.now() + 1).toString();
-      setMessages((prev) => [...prev, { id: aiMsgId, role: 'assistant', content: cachedResponse }]);
-      setLoading(false);
-      
-      // Speak the cached response
-      if (voiceEnabled && ttsSupported) {
-        speak(cachedResponse);
+    // Check cache first (only for text-only queries)
+    if (!currentImage) {
+      const cachedResponse = getCachedResponse(userMessage);
+      if (cachedResponse) {
+        const aiMsgId = (Date.now() + 1).toString();
+        setMessages((prev) => [...prev, { id: aiMsgId, role: 'assistant', content: cachedResponse }]);
+        setLoading(false);
+        
+        // Speak the cached response
+        if (voiceEnabled && ttsSupported) {
+          speak(cachedResponse);
+        }
+        return;
       }
-      return;
     }
 
     try {
       // Call the AI edge function
+      const requestBody: any = { 
+        message: userMessage || 'Please analyze this crop image.', 
+        language,
+        context: messages.slice(-6).map(m => ({ role: m.role, content: m.content }))
+      };
+
+      // Add image if present
+      if (currentImage) {
+        requestBody.image = {
+          base64: currentImage.base64,
+          mimeType: currentImage.mimeType,
+        };
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { 
-          message: userMessage, 
-          language,
-          context: messages.slice(-6).map(m => ({ role: m.role, content: m.content }))
-        }
+        body: requestBody
       });
 
       if (error) {
@@ -147,7 +186,7 @@ const Chat = () => {
 
       const aiResponse = data?.response || 'Sorry, I could not process your request. Please try again.';
 
-      // Cache the response
+      // Cache the response (only for text-only queries)
       setCachedResponse(userMessage, aiResponse);
 
       // Add AI message to UI
@@ -181,6 +220,8 @@ const Chat = () => {
           ? '⚠️ क्षमा करें, कुछ गलत हो गया। कृपया पुनः प्रयास करें।'
           : language === 'mr'
           ? '⚠️ माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
+          : language === 'kn'
+          ? '⚠️ ಕ್ಷಮಿಸಿ, ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.'
           : '⚠️ Sorry, something went wrong. Please try again.'
       }]);
     } finally {
@@ -208,6 +249,19 @@ const Chat = () => {
       stopSpeaking();
     }
     setVoiceEnabled(!voiceEnabled);
+  };
+
+  const getEmptyStateText = () => {
+    switch (language) {
+      case 'hi':
+        return 'फसलों, मिट्टी, कीटों, मौसम या किसी भी खेती के सवाल के बारे में पूछें! 📷 रोग पहचान के लिए फसल की फोटो भी भेज सकते हैं।';
+      case 'mr':
+        return 'पिके, माती, कीटक, हवामान किंवा शेतीबद्दल काहीही विचारा! 📷 रोग ओळखण्यासाठी पिकाचा फोटोही पाठवू शकता.';
+      case 'kn':
+        return 'ಬೆಳೆಗಳು, ಮಣ್ಣು, ಕೀಟಗಳು, ಹವಾಮಾನ ಅಥವಾ ಯಾವುದೇ ಕೃಷಿ ಪ್ರಶ್ನೆ ಕೇಳಿ! 📷 ರೋಗ ಗುರುತಿಸಲು ಬೆಳೆ ಫೋಟೋ ಕೂಡ ಕಳುಹಿಸಬಹುದು.';
+      default:
+        return 'Ask me about crops, soil, pests, weather, or any farming question! 📷 You can also send a crop photo for disease diagnosis.';
+    }
   };
 
   return (
@@ -243,9 +297,7 @@ const Chat = () => {
               {t('chat.title')}
             </h2>
             <p className="text-muted-foreground max-w-xs mx-auto mb-6">
-              {language === 'en' && 'Ask me about crops, soil, pests, weather, or any farming question!'}
-              {language === 'hi' && 'फसलों, मिट्टी, कीटों, मौसम या किसी भी खेती के सवाल के बारे में पूछें!'}
-              {language === 'mr' && 'पिके, माती, कीटक, हवामान किंवा शेतीबद्दल काहीही विचारा!'}
+              {getEmptyStateText()}
             </p>
             
             {/* Voice hint */}
@@ -273,6 +325,14 @@ const Chat = () => {
                   : 'bg-card'
                 }`}
             >
+              {/* Show image if attached */}
+              {message.image_url && (
+                <img 
+                  src={message.image_url} 
+                  alt="Uploaded crop" 
+                  className="w-full max-w-[200px] rounded-lg mb-2"
+                />
+              )}
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
             </Card>
             {message.role === 'user' && (
@@ -319,9 +379,11 @@ const Chat = () => {
             />
           )}
           
-          <Button variant="outline" size="icon" className="flex-shrink-0">
-            <ImagePlus className="w-5 h-5" />
-          </Button>
+          {/* Image Upload */}
+          <ImageUpload 
+            onImageSelect={handleImageSelect}
+            disabled={loading || isListening}
+          />
           
           <Textarea
             value={input}
@@ -335,13 +397,20 @@ const Chat = () => {
           
           <Button
             onClick={() => handleSend()}
-            disabled={!input.trim() || loading}
+            disabled={(!input.trim() && !selectedImage) || loading}
             size="icon"
             className="flex-shrink-0"
           >
             <Send className="w-5 h-5" />
           </Button>
         </div>
+        
+        {/* Image preview indicator */}
+        {selectedImage && (
+          <p className="text-xs text-primary mt-2 flex items-center gap-1">
+            📷 {language === 'hi' ? 'फोटो जोड़ा गया' : language === 'mr' ? 'फोटो जोडला' : language === 'kn' ? 'ಫೋಟೋ ಸೇರಿಸಲಾಗಿದೆ' : 'Image attached'}
+          </p>
+        )}
       </div>
     </div>
   );
