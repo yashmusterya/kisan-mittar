@@ -1,292 +1,154 @@
 
-# Enhancement Plan: Dark Theme, Forum & Role System
+# Plan: Live Weather Data & Location-Based Search for Seeds
 
 ## Overview
-This plan adds three major features to KisaanMitra:
-1. **Dark Theme Switch** - Toggle between light and dark modes
-2. **Community Forum** - Reddit-style discussion platform for farmers
-3. **Role-Based Access Control** - Admin, Farmer, and Seller roles with proper security
+This plan adds two major features:
+1. **Live Weather Data** - Replace mock weather with real-time data from OpenWeatherMap API
+2. **Location-Based Seeds Search** - Add geographical filtering to the Shop page for seeds and products
 
 ---
 
-## Phase 1: Role System (Secure Implementation)
+## Feature 1: Live Weather Data
 
-### Database Changes
-Create a separate `user_roles` table following security best practices (roles MUST NOT be stored in profiles table to prevent privilege escalation):
-
-```text
-+-------------------+     +-------------------+
-|   user_roles      |     |   app_role enum   |
-+-------------------+     +-------------------+
-| id (uuid)         |     | 'admin'           |
-| user_id (ref auth)|     | 'farmer'          |
-| role (app_role)   |     | 'seller'          |
-| created_at        |     +-------------------+
-+-------------------+
-```
-
-### Security Function
-Create a `has_role()` security definer function to check roles without RLS recursion:
-
-```text
-has_role(user_id, role) -> boolean
-- SECURITY DEFINER (bypasses RLS safely)
-- Used in all RLS policies
-```
-
-### Admin Capabilities
-- View all users and their roles
-- Grant/revoke roles to any user
-- Access to all forum posts (moderate)
-- Access to user management page
-
-### New Page: AdminDashboard.tsx
-- User management table
-- Role assignment dropdown
-- Statistics overview
-
----
-
-## Phase 2: Dark Theme Switch
+### Current State
+- Weather uses hardcoded mock data in `src/data/mockWeather.ts`
+- The Weather page (`src/pages/Weather.tsx`) displays static information
+- User profiles already store `latitude` and `longitude` fields
 
 ### Implementation Approach
-The app already has dark theme CSS variables defined in `index.css`. We'll use `next-themes` (already installed) to manage theme state.
-
-### New Component: ThemeToggle.tsx
-```text
-+---------------------------+
-|  [Sun/Moon Icon]          |
-|  Toggle button in Header  |
-+---------------------------+
-```
+Create a backend function to fetch weather data securely (API key stays server-side), then update the frontend to use real data.
 
 ### Changes Required
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Wrap with ThemeProvider |
-| `src/components/layout/Header.tsx` | Add ThemeToggle button |
-| `src/components/ui/ThemeToggle.tsx` | New component with Sun/Moon icons |
-| `index.html` | Add script to prevent flash |
 
-### Theme Persistence
-- Saved to localStorage
-- Respects system preference initially
-- Smooth transition animation
+**1. Create Weather Edge Function**
+- New file: `supabase/functions/weather/index.ts`
+- Accepts user's latitude/longitude as parameters
+- Calls OpenWeatherMap API for current weather and 5-day forecast
+- Returns data in a format compatible with existing UI components
+- Uses Lovable AI to generate farming recommendations based on weather conditions
 
----
+**2. Add OpenWeatherMap API Key**
+- Request user to add `OPENWEATHERMAP_API_KEY` secret
+- Free tier provides 60 calls/minute, sufficient for this use case
 
-## Phase 3: Community Forum
+**3. Create Weather Hook**
+- New file: `src/hooks/useWeather.ts`
+- Manages weather data fetching with loading/error states
+- Caches data to avoid excessive API calls
+- Uses user's profile location or browser geolocation
 
-### Database Schema
-```text
-+-------------------+     +-------------------+     +-------------------+
-|   forum_posts     |     |  forum_comments   |     |   forum_votes     |
-+-------------------+     +-------------------+     +-------------------+
-| id (uuid)         |     | id (uuid)         |     | id (uuid)         |
-| user_id           |     | post_id           |     | user_id           |
-| title             |     | user_id           |     | post_id (nullable)|
-| content           |     | content           |     | comment_id        |
-| category          |     | created_at        |     | vote_type (+1/-1) |
-| image_url         |     +-------------------+     | created_at        |
-| votes_count       |                               +-------------------+
-| comments_count    |
-| created_at        |
-+-------------------+
-```
+**4. Update Weather Page**
+- Modify `src/pages/Weather.tsx` to use live data
+- Add loading skeleton and error states
+- Add location detection button if no location saved
 
-### Forum Categories (Enum)
-- crops - Crop-related discussions
-- pests - Pest and disease problems
-- market - Selling/buying tips
-- weather - Weather discussions
-- general - General farming topics
-
-### New Pages
-| Page | Purpose |
-|------|---------|
-| `Forum.tsx` | Main forum feed with filters |
-| `ForumPost.tsx` | Individual post with comments |
-| `CreatePost.tsx` | New post form |
-
-### Forum Features
-1. **Feed View** - Sorted by: Hot, New, Top
-2. **Category Filters** - Filter by topic
-3. **Upvote/Downvote** - Like Reddit
-4. **Comments** - Nested replies
-5. **User Attribution** - Show role badges (Farmer, Seller, Admin)
-6. **Multilingual** - Post in any supported language
-
-### New Components
-```text
-src/components/forum/
-  ├── PostCard.tsx        # Forum post preview
-  ├── CommentSection.tsx  # Comments list
-  ├── VoteButtons.tsx     # Upvote/downvote
-  ├── CategoryBadge.tsx   # Topic indicator
-  └── RoleBadge.tsx       # User role display
-```
+**5. Update Weather Components**
+- Update `src/components/weather/WeatherCard.tsx` for live data
+- Update `src/components/weather/WeatherAlert.tsx` for real alerts
 
 ---
 
-## Phase 4: Navigation Updates
+## Feature 2: Location-Based Search for Seeds/Products
 
-### Updated MobileNav
-Add Forum to the 5-tab navigation:
+### Current State
+- Shop page (`src/pages/Shop.tsx`) has no location filtering
+- Products table has no location fields
+- Rental equipment already has location-based search (good reference)
 
-```text
-+--------------------------------------------------+
-|  [Home]  [Chat]  [Forum]  [Shop]  [Profile]      |
-+--------------------------------------------------+
-   🏠       💬       👥       🛒       👤
-```
+### Implementation Approach
+Add location fields to products table, then implement distance-based filtering similar to the rental equipment page.
 
-### Header Updates
-- Add theme toggle (Sun/Moon icon)
-- Show admin badge for admins
+### Database Changes Required
+Add location columns to products table:
+- `latitude` (nullable)
+- `longitude` (nullable) 
+- `seller_location` (text, nullable) - readable location name
 
----
+### Frontend Changes
 
-## Phase 5: Translation Updates
+**1. Update Shop Page**
+- Add location detection button (similar to RentalEquipment page)
+- Add distance display next to products
+- Sort products by proximity when location is available
+- Add "Nearby Seeds" filter option
 
-### New Translation Keys
-```text
-// Theme
-'theme.light': 'Light / लाइट / प्रकाश / ಬೆಳಕು'
-'theme.dark': 'Dark / डार्क / गडद / ಡಾರ್ಕ್'
-
-// Forum
-'forum.title': 'Community / समुदाय / समुदाय / ಸಮುದಾಯ'
-'forum.createPost': 'Create Post / पोस्ट बनाएं'
-'forum.comments': 'Comments / टिप्पणियां'
-'forum.upvote': 'Upvote / पसंद'
-'forum.categories.*': [crops, pests, market, weather, general]
-
-// Roles
-'roles.admin': 'Admin / व्यवस्थापक'
-'roles.farmer': 'Farmer / किसान'
-'roles.seller': 'Seller / विक्रेता'
-
-// Admin
-'admin.title': 'Admin Panel / एडमिन पैनल'
-'admin.manageUsers': 'Manage Users / उपयोगकर्ता प्रबंधित करें'
-'admin.assignRole': 'Assign Role / भूमिका असाइन करें'
-```
-
----
-
-## File Changes Summary
-
-### New Files
-| File | Purpose |
-|------|---------|
-| `src/components/ui/ThemeToggle.tsx` | Dark/light toggle |
-| `src/pages/Forum.tsx` | Forum main page |
-| `src/pages/ForumPost.tsx` | Single post view |
-| `src/pages/CreatePost.tsx` | New post creation |
-| `src/pages/AdminDashboard.tsx` | Admin panel |
-| `src/components/forum/PostCard.tsx` | Post preview |
-| `src/components/forum/CommentSection.tsx` | Comments |
-| `src/components/forum/VoteButtons.tsx` | Voting UI |
-| `src/components/forum/CategoryBadge.tsx` | Category tag |
-| `src/components/forum/RoleBadge.tsx` | Role indicator |
-| `src/hooks/useUserRole.ts` | Role checking hook |
-
-### Modified Files
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add ThemeProvider, Forum routes, Admin route |
-| `src/components/layout/Header.tsx` | Add theme toggle |
-| `src/components/layout/MobileNav.tsx` | Add Forum tab, dynamic for admin |
-| `src/contexts/LanguageContext.tsx` | Add forum/admin translations |
-| `src/contexts/AuthContext.tsx` | Remove role from Profile type (security) |
-
-### Database Migration
-- Create `app_role` enum (admin, farmer, seller)
-- Create `user_roles` table with RLS
-- Create `has_role()` security definer function
-- Create `forum_posts`, `forum_comments`, `forum_votes` tables
-- Create `forum_category` enum
-- Add RLS policies for all new tables
-- Seed initial admin user
-
----
-
-## Security Considerations
-
-### Role System
-1. **Separate Table** - Roles stored in `user_roles`, NOT in profiles
-2. **Security Definer** - `has_role()` function prevents RLS recursion
-3. **Server-Side Validation** - Never trust client-side role checks
-4. **RLS Policies** - All tables protected with proper policies
-
-### Forum Security
-1. **User Attribution** - Posts tied to authenticated users
-2. **Edit/Delete** - Only post owner or admin can modify
-3. **Rate Limiting** - Prevent spam (10 posts/hour)
-4. **Content Moderation** - Admin can remove posts
-
-### Admin Panel
-1. **Protected Route** - Only accessible to admins
-2. **Role Check** - Server-side verification via `has_role()`
-3. **Audit Trail** - Log role changes (future enhancement)
-
----
-
-## User Flow Examples
-
-### Farmer Creates Post
-1. Navigate to Forum tab
-2. Tap "Create Post" button
-3. Select category (e.g., "pests")
-4. Write title and content
-5. Optionally attach image
-6. Submit -> Post appears in feed
-
-### Admin Assigns Role
-1. Login as admin
-2. Navigate to Admin Dashboard
-3. Search for user
-4. Select role from dropdown
-5. Confirm -> Role updated immediately
-
-### Dark Mode Toggle
-1. Tap moon icon in header
-2. Theme switches instantly
-3. Preference saved to localStorage
-4. Persists across sessions
+**2. Create Shared Location Utilities**
+- New file: `src/lib/location.ts`
+- Extract `calculateDistance` function from RentalEquipment
+- Add geocoding helpers if needed
 
 ---
 
 ## Technical Architecture
 
 ```text
-                    +------------------+
-                    |   ThemeProvider  |
-                    |  (next-themes)   |
-                    +--------+---------+
-                             |
-              +--------------+--------------+
-              |                             |
-    +---------v---------+         +---------v---------+
-    |      Header       |         |     App Routes    |
-    | (ThemeToggle)     |         +---------+---------+
-    +-------------------+                   |
-                               +------------+------------+
-                               |            |            |
-                        +------v--+   +-----v-----+  +---v---+
-                        | Forum   |   | Admin     |  | ...   |
-                        | Pages   |   | Dashboard |  |       |
-                        +---------+   +-----------+  +-------+
+┌─────────────────────────────────────────────────────────────┐
+│                      Frontend                               │
+├─────────────────────────────────────────────────────────────┤
+│  Weather Page          │  Shop Page                         │
+│  ├─ useWeather hook    │  ├─ useLocation hook               │
+│  ├─ WeatherCard        │  ├─ ProductCard (+ distance)       │
+│  └─ WeatherAlert       │  └─ CategoryFilter (+ nearby)      │
+└───────────┬─────────────────────────┬───────────────────────┘
+            │                         │
+            ▼                         ▼
+┌───────────────────────┐   ┌─────────────────────────────────┐
+│  weather edge func    │   │  Supabase Database              │
+│  ├─ OpenWeatherMap    │   │  ├─ products (+ lat/lng)        │
+│  └─ AI recommendations│   │  └─ profiles (lat/lng exists)   │
+└───────────────────────┘   └─────────────────────────────────┘
 ```
 
 ---
 
-## Implementation Priority
+## Implementation Steps
 
-1. **Database Migration** - Create role system and forum tables
-2. **Theme Toggle** - Quick win, visible improvement
-3. **Role System** - Security foundation
-4. **Forum Basic** - Posts and feed
-5. **Forum Comments** - Engagement features
-6. **Admin Dashboard** - User management
-7. **Translations** - Multilingual support
+### Step 1: Add API Key Secret
+Request user to configure OpenWeatherMap API key
+
+### Step 2: Create Weather Edge Function
+Build the backend function to fetch and process weather data
+
+### Step 3: Database Migration
+Add location columns to products table with seed data updates
+
+### Step 4: Create Shared Utilities
+- `src/lib/location.ts` - distance calculation and geolocation
+- `src/hooks/useWeather.ts` - weather data management
+
+### Step 5: Update Weather UI
+- Modify Weather page for live data with loading states
+- Update WeatherCard and WeatherAlert components
+
+### Step 6: Update Shop UI
+- Add location detection to Shop page
+- Display distance for products with location
+- Add sorting by proximity
+
+---
+
+## Files to Create
+| File | Purpose |
+|------|---------|
+| `supabase/functions/weather/index.ts` | Fetch live weather from OpenWeatherMap |
+| `src/hooks/useWeather.ts` | Weather data hook with caching |
+| `src/lib/location.ts` | Shared geolocation utilities |
+
+## Files to Modify
+| File | Changes |
+|------|---------|
+| `src/pages/Weather.tsx` | Use live data, add loading states |
+| `src/pages/Shop.tsx` | Add location filtering and distance display |
+| `src/components/weather/WeatherCard.tsx` | Accept props for live data |
+| `src/components/weather/WeatherAlert.tsx` | Accept props for live alerts |
+| `src/components/shop/ProductCard.tsx` | Display distance if available |
+
+## Database Changes
+| Table | New Columns |
+|-------|-------------|
+| `products` | `latitude`, `longitude`, `seller_location` |
+
+---
+
+## User Action Required
+You'll need to provide an **OpenWeatherMap API key** for live weather data. You can get a free key at [openweathermap.org](https://openweathermap.org/api) (free tier: 60 calls/minute).
