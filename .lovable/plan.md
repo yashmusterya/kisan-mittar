@@ -184,4 +184,3 @@ The AI will provide responses like:
 - "Based on your location near Pune, Maharashtra, expect partly cloudy conditions with temperatures around 28-32°C"
 - "This is Rabi season - good time for wheat and chickpea sowing"
 - Alerts for monsoon onset, heat waves, or frost warnings
-
