@@ -14,7 +14,285 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crops: {
+        Row: {
+          common_diseases: string[] | null
+          created_at: string
+          growing_season: string | null
+          id: string
+          name_en: string
+          name_hi: string
+          name_mr: string
+          soil_requirements: string | null
+          water_needs: string | null
+        }
+        Insert: {
+          common_diseases?: string[] | null
+          created_at?: string
+          growing_season?: string | null
+          id?: string
+          name_en: string
+          name_hi: string
+          name_mr: string
+          soil_requirements?: string | null
+          water_needs?: string | null
+        }
+        Update: {
+          common_diseases?: string[] | null
+          created_at?: string
+          growing_season?: string | null
+          id?: string
+          name_en?: string
+          name_hi?: string
+          name_mr?: string
+          soil_requirements?: string | null
+          water_needs?: string | null
+        }
+        Relationships: []
+      }
+      expert_answers: {
+        Row: {
+          answer: string
+          created_at: string
+          expert_id: string
+          id: string
+          is_verified: boolean
+          query_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          expert_id: string
+          id?: string
+          is_verified?: boolean
+          query_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          expert_id?: string
+          id?: string
+          is_verified?: boolean
+          query_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_answers_query_id_fkey"
+            columns: ["query_id"]
+            isOneToOne: false
+            referencedRelation: "farmer_queries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faqs: {
+        Row: {
+          answer_en: string
+          answer_hi: string
+          answer_mr: string
+          category: Database["public"]["Enums"]["faq_category"]
+          created_at: string
+          id: string
+          question_en: string
+          question_hi: string
+          question_mr: string
+        }
+        Insert: {
+          answer_en: string
+          answer_hi: string
+          answer_mr: string
+          category: Database["public"]["Enums"]["faq_category"]
+          created_at?: string
+          id?: string
+          question_en: string
+          question_hi: string
+          question_mr: string
+        }
+        Update: {
+          answer_en?: string
+          answer_hi?: string
+          answer_mr?: string
+          category?: Database["public"]["Enums"]["faq_category"]
+          created_at?: string
+          id?: string
+          question_en?: string
+          question_hi?: string
+          question_mr?: string
+        }
+        Relationships: []
+      }
+      farmer_queries: {
+        Row: {
+          ai_response: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          question: string
+          status: Database["public"]["Enums"]["query_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_response?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          status?: Database["public"]["Enums"]["query_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          status?: Database["public"]["Enums"]["query_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farmer_queries_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          language: Database["public"]["Enums"]["app_language"]
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          primary_crop: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          language?: Database["public"]["Enums"]["app_language"]
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          primary_crop?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          language?: Database["public"]["Enums"]["app_language"]
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          primary_crop?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      soil_types: {
+        Row: {
+          characteristics: string | null
+          created_at: string
+          id: string
+          name_en: string
+          name_hi: string
+          name_mr: string
+          suitable_crops: string[] | null
+        }
+        Insert: {
+          characteristics?: string | null
+          created_at?: string
+          id?: string
+          name_en: string
+          name_hi: string
+          name_mr: string
+          suitable_crops?: string[] | null
+        }
+        Update: {
+          characteristics?: string | null
+          created_at?: string
+          id?: string
+          name_en?: string
+          name_hi?: string
+          name_mr?: string
+          suitable_crops?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +301,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_language: "en" | "hi" | "mr"
+      faq_category: "crops" | "soil" | "pests" | "seasons" | "water"
+      query_status: "pending" | "ai_answered" | "expert_verified" | "flagged"
+      user_role: "farmer" | "expert"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +431,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_language: ["en", "hi", "mr"],
+      faq_category: ["crops", "soil", "pests", "seasons", "water"],
+      query_status: ["pending", "ai_answered", "expert_verified", "flagged"],
+      user_role: ["farmer", "expert"],
+    },
   },
 } as const
