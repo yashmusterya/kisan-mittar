@@ -74,38 +74,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
+    let mounted = true;
+
+    const setAuthState = (nextSession: Session | null) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
       setLoading(false);
+
+      if (nextSession?.user) {
+        // Defer any additional backend calls to avoid auth deadlocks
+        setTimeout(() => {
+          if (mounted) fetchProfile(nextSession.user.id);
+        }, 0);
+      } else {
+        setProfile(null);
+      }
+    };
+
+    // Listen for auth changes FIRST (must be sync; no backend calls inside)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, nextSession) => {
+      setAuthState(nextSession);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          // Keep admin logged in if it was a mock session? 
-          // Actually supabase auth change might wipe it, so we rely on local state if needed.
-          // But for now, let's treat it as transient.
-          // If we want it to persist, we'd need local storage.
-          // For prototype, simple login is fine.
-          if (user?.id !== 'admin-123') {
-            setProfile(null);
-          }
-        }
+    // THEN get initial session
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: initialSession } }) => {
+        setAuthState(initialSession);
+      })
+      .catch(() => {
+        if (!mounted) return;
         setLoading(false);
-      }
-    );
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (
