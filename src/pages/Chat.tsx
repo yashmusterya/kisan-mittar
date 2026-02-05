@@ -15,40 +15,12 @@ interface Message {
   image_url?: string;
 }
 
-const SimAgronomist = (query: string, lang: string): string => {
-  const q = query.toLowerCase();
-
-  // Simple keyword matching for prototype
-  if (q.includes('weather') || q.includes('rain') || q.includes('mausam')) {
-    return lang === 'hi'
-      ? 'स्थानीय मौसम की स्थिति खेती के लिए अनुकूल लग रही है। हालांकि, कृपया बारिश के पूर्वानुमान के लिए स्थानीय अपडेट देखें।'
-      : 'The local weather conditions seem favorable for farming. However, please check local updates for rain forecasts.';
-  }
-
-  if (q.includes('wheat') || q.includes('gehu')) {
-    return lang === 'hi'
-      ? 'गेहूं की बुवाई के लिए तापमान 20-25 डिग्री सेल्सियस आदर्श है। सुनिश्चित करें कि मिट्टी में पर्याप्त नमी हो।'
-      : 'For wheat sowing, a temperature of 20-25°C is ideal. Ensure the soil has adequate moisture.';
-  }
-
-  if (q.includes('pest') || q.includes('insect') || q.includes('keeda')) {
-    return lang === 'hi'
-      ? 'कीटों के नियंत्रण के लिए, पहले नीम आधारित कीटनाशकों का प्रयास करें। यदि संक्रमण गंभीर है, तो किसी कृषि विशेषज्ञ से सलाह लें।'
-      : 'For pest control, try neem-based pesticides first. If the infestation is severe, consult an agricultural expert.';
-  }
-
-  return lang === 'hi'
-    ? 'मैं एक AI किसान मित्र हूँ। कृपया मुझे अपनी फसल या मौसम के बारे में और बताएं ताकि मैं मदद कर सकूं।'
-    : 'I am an AI Kisan Mitra. Please tell me more about your crop or weather so I can help better.';
-};
-
 const Chat = () => {
   const { language, t } = useLanguage();
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -58,22 +30,6 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const createConversation = async () => {
-    // For prototype, we might not block on this, but we'll try to save if auth exists
-    if (!user) return null;
-    try {
-      const { data, error } = await supabase
-        .from('ai_conversations')
-        .insert({ user_id: user.id, title: 'New Conversation' })
-        .select()
-        .single();
-      if (error) return null;
-      return data.id;
-    } catch {
-      return null;
-    }
-  };
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -87,31 +43,50 @@ const Chat = () => {
     setMessages((prev) => [...prev, { id: userMsgId, role: 'user', content: userMessage }]);
 
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the AI edge function
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { 
+          message: userMessage, 
+          language,
+          context: messages.slice(-6).map(m => ({ role: m.role, content: m.content }))
+        }
+      });
 
-      // Get AI response (Local Logic)
-      const aiResponse = SimAgronomist(userMessage, language);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to get AI response');
+      }
+
+      const aiResponse = data?.response || 'Sorry, I could not process your request. Please try again.';
 
       // Add AI message to UI
       const aiMsgId = (Date.now() + 1).toString();
       setMessages((prev) => [...prev, { id: aiMsgId, role: 'assistant', content: aiResponse }]);
 
-      // Attempt to save to Supabase asynchronously (don't block UI)
-      if (user) {
-        createConversation().then(cid => {
-          if (cid) {
-            supabase.from('ai_messages').insert([
-              { conversation_id: cid, role: 'user', content: userMessage },
-              { conversation_id: cid, role: 'assistant', content: aiResponse }
-            ]);
-          }
-        });
-      }
-
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Failed to get response.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get response';
+      
+      // Handle rate limit errors
+      if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
+        toast.error('Too many requests. Please wait a moment and try again.');
+      } else if (errorMessage.includes('402') || errorMessage.includes('Payment')) {
+        toast.error('AI service temporarily unavailable. Please try again later.');
+      } else {
+        toast.error('Failed to get response. Please try again.');
+      }
+      
+      // Add error message to chat
+      const errorMsgId = (Date.now() + 1).toString();
+      setMessages((prev) => [...prev, { 
+        id: errorMsgId, 
+        role: 'assistant', 
+        content: language === 'hi' 
+          ? '⚠️ क्षमा करें, कुछ गलत हो गया। कृपया पुनः प्रयास करें।'
+          : language === 'mr'
+          ? '⚠️ माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
+          : '⚠️ Sorry, something went wrong. Please try again.'
+      }]);
     } finally {
       setLoading(false);
     }
