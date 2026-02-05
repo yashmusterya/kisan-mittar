@@ -496,7 +496,7 @@ export type Database = {
         | "frost"
         | "drought"
         | "pest_outbreak"
-      app_language: "en" | "hi" | "mr"
+      app_language: "en" | "hi" | "mr" | "kn"
       faq_category: "crops" | "soil" | "pests" | "seasons" | "water"
       product_category:
         | "seeds"
@@ -642,7 +642,7 @@ export const Constants = {
         "drought",
         "pest_outbreak",
       ],
-      app_language: ["en", "hi", "mr"],
+      app_language: ["en", "hi", "mr", "kn"],
       faq_category: ["crops", "soil", "pests", "seasons", "water"],
       product_category: [
         "seeds",

@@ -21,6 +21,7 @@ const langCodes: Record<string, string> = {
   en: 'en-IN',
   hi: 'hi-IN',
   mr: 'mr-IN',
+  kn: 'kn-IN',
 };
 
 // Type definitions for Web Speech API

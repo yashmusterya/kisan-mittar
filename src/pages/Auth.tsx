@@ -31,14 +31,14 @@
      setLoading(true);
  
      try {
-       if (mode === 'signup') {
-         const { error } = await signUp(email, password, {
-           full_name: fullName,
-           role,
-           language,
-           location: location || undefined,
-           primary_crop: primaryCrop || undefined,
-         });
+        if (mode === 'signup') {
+          const { error } = await signUp(email, password, {
+            full_name: fullName,
+            role,
+            language: language as 'en' | 'hi' | 'mr' | 'kn',
+            location: location || undefined,
+            primary_crop: primaryCrop || undefined,
+          });
  
          if (error) {
            toast.error(error.message);
