@@ -505,10 +505,13 @@ export type Database = {
           id: string
           image_url: string | null
           in_stock: boolean
+          latitude: number | null
+          longitude: number | null
           name_en: string
           name_hi: string
           name_mr: string
           price: number
+          seller_location: string | null
         }
         Insert: {
           category: Database["public"]["Enums"]["product_category"]
@@ -521,10 +524,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name_en: string
           name_hi: string
           name_mr: string
           price: number
+          seller_location?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["product_category"]
@@ -537,10 +543,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name_en?: string
           name_hi?: string
           name_mr?: string
           price?: number
+          seller_location?: string | null
         }
         Relationships: [
           {
