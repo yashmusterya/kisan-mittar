@@ -3,7 +3,8 @@
  import { useLanguage, Language } from '@/contexts/LanguageContext';
  import { Button } from '@/components/ui/button';
  import { Card } from '@/components/ui/card';
- import { Sprout, Sun, CloudRain, Users } from 'lucide-react';
+import { CloudRain, Users, Sprout } from 'lucide-react';
+import logo from '@/assets/logo.png';
  
  const languages: { code: Language; name: string; native: string }[] = [
    { code: 'en', name: 'English', native: 'English' },
@@ -67,11 +68,11 @@
          <div className="w-full max-w-md text-center">
            {/* Logo */}
            <div className="mb-8">
-             <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-               <Sprout className="w-12 h-12 text-primary" />
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-background shadow-lg overflow-hidden">
+              <img src={logo} alt="Kisaan Mitra" className="w-full h-full object-cover" />
              </div>
              <h1 className="text-3xl font-bold text-foreground mb-2">
-               {t('welcome.title')}
+              Kisaan Mitra
              </h1>
              <p className="text-muted-foreground">
                {t('welcome.subtitle')}

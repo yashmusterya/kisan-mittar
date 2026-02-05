@@ -7,7 +7,7 @@
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
  import { Label } from '@/components/ui/label';
- import { User, MapPin, Sprout, Globe, LogOut, Loader2 } from 'lucide-react';
+import { User, MapPin, Sprout, Globe, LogOut, Loader2, Navigation } from 'lucide-react';
  import { toast } from 'sonner';
  
  const Profile = () => {
@@ -17,12 +17,61 @@
    
    const [editing, setEditing] = useState(false);
    const [loading, setLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
    const [formData, setFormData] = useState({
      full_name: profile?.full_name || '',
      location: profile?.location || '',
      primary_crop: profile?.primary_crop || '',
+    latitude: profile?.latitude || null as number | null,
+    longitude: profile?.longitude || null as number | null,
    });
  
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error(language === 'en' ? 'Geolocation not supported' : 'जियोलोकेशन समर्थित नहीं है');
+      return;
+    }
+
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Try to get location name using reverse geocoding (free API)
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+          );
+          const data = await response.json();
+          const locationName = data.address?.city || data.address?.town || data.address?.village || 
+                              data.address?.county || data.address?.state || `${latitude.toFixed(2)}°N, ${longitude.toFixed(2)}°E`;
+          
+          setFormData(prev => ({ 
+            ...prev, 
+            location: `${locationName}, ${data.address?.state || 'India'}`,
+            latitude,
+            longitude
+          }));
+          toast.success(language === 'en' ? 'Location detected!' : 'स्थान मिल गया!');
+        } catch {
+          setFormData(prev => ({ 
+            ...prev, 
+            location: `${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°E`,
+            latitude,
+            longitude
+          }));
+        }
+        setGettingLocation(false);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        toast.error(language === 'en' ? 'Could not get location' : 'स्थान नहीं मिल सका');
+        setGettingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
    const handleSave = async () => {
      if (!profile) return;
      
@@ -33,6 +82,8 @@
          full_name: formData.full_name,
          location: formData.location,
          primary_crop: formData.primary_crop,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
          language,
        })
        .eq('id', profile.id);
@@ -89,11 +140,32 @@
                </div>
                <div className="space-y-2">
                  <Label htmlFor="location">{t('auth.location')}</Label>
-                 <Input
-                   id="location"
-                   value={formData.location}
-                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                 />
+                  <div className="flex gap-2">
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      className="flex-1"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon"
+                      onClick={handleGetLocation}
+                      disabled={gettingLocation}
+                    >
+                      {gettingLocation ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Navigation className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'en' ? 'Tap the button to detect your location automatically' :
+                     language === 'hi' ? 'अपना स्थान स्वचालित रूप से पता लगाने के लिए बटन दबाएं' :
+                     'तुमचे स्थान स्वयंचलितपणे शोधण्यासाठी बटण दाबा'}
+                  </p>
                </div>
                <div className="space-y-2">
                  <Label htmlFor="crop">{t('auth.primaryCrop')}</Label>
