@@ -73,6 +73,38 @@ export type Database = {
           },
         ]
       }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crops: {
         Row: {
           common_diseases: string[] | null
@@ -221,6 +253,110 @@ export type Database = {
           },
         ]
       }
+      govt_offers: {
+        Row: {
+          created_at: string
+          description_en: string | null
+          description_hi: string | null
+          description_mr: string | null
+          discount_percent: number
+          eligibility: string | null
+          id: string
+          name_en: string
+          name_hi: string
+          name_mr: string
+          scheme_code: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          description_en?: string | null
+          description_hi?: string | null
+          description_mr?: string | null
+          discount_percent?: number
+          eligibility?: string | null
+          id?: string
+          name_en: string
+          name_hi: string
+          name_mr: string
+          scheme_code: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          description_en?: string | null
+          description_hi?: string | null
+          description_mr?: string | null
+          discount_percent?: number
+          eligibility?: string | null
+          id?: string
+          name_en?: string
+          name_hi?: string
+          name_mr?: string
+          scheme_code?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: Database["public"]["Enums"]["product_category"]
+          created_at: string
+          description_en: string | null
+          description_hi: string | null
+          description_mr: string | null
+          discounted_price: number | null
+          govt_offer_id: string | null
+          id: string
+          image_url: string | null
+          in_stock: boolean
+          name_en: string
+          name_hi: string
+          name_mr: string
+          price: number
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          description_en?: string | null
+          description_hi?: string | null
+          description_mr?: string | null
+          discounted_price?: number | null
+          govt_offer_id?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          name_en: string
+          name_hi: string
+          name_mr: string
+          price: number
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          description_en?: string | null
+          description_hi?: string | null
+          description_mr?: string | null
+          discounted_price?: number | null
+          govt_offer_id?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          name_en?: string
+          name_hi?: string
+          name_mr?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_govt_offer_id_fkey"
+            columns: ["govt_offer_id"]
+            isOneToOne: false
+            referencedRelation: "govt_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -293,6 +429,57 @@ export type Database = {
         }
         Relationships: []
       }
+      weather_alerts: {
+        Row: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          location: string | null
+          message_en: string
+          message_hi: string
+          message_mr: string
+          severity: Database["public"]["Enums"]["alert_severity"]
+          title_en: string
+          title_hi: string
+          title_mr: string
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          location?: string | null
+          message_en: string
+          message_hi: string
+          message_mr: string
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          title_en: string
+          title_hi: string
+          title_mr: string
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: Database["public"]["Enums"]["alert_type"]
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          location?: string | null
+          message_en?: string
+          message_hi?: string
+          message_mr?: string
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          title_en?: string
+          title_hi?: string
+          title_mr?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -301,8 +488,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      alert_severity: "low" | "medium" | "high" | "critical"
+      alert_type:
+        | "rain"
+        | "heat_wave"
+        | "storm"
+        | "frost"
+        | "drought"
+        | "pest_outbreak"
       app_language: "en" | "hi" | "mr"
       faq_category: "crops" | "soil" | "pests" | "seasons" | "water"
+      product_category:
+        | "seeds"
+        | "fertilizers"
+        | "pesticides"
+        | "tools"
+        | "irrigation"
       query_status: "pending" | "ai_answered" | "expert_verified" | "flagged"
       user_role: "farmer" | "expert"
     }
@@ -432,8 +633,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      alert_severity: ["low", "medium", "high", "critical"],
+      alert_type: [
+        "rain",
+        "heat_wave",
+        "storm",
+        "frost",
+        "drought",
+        "pest_outbreak",
+      ],
       app_language: ["en", "hi", "mr"],
       faq_category: ["crops", "soil", "pests", "seasons", "water"],
+      product_category: [
+        "seeds",
+        "fertilizers",
+        "pesticides",
+        "tools",
+        "irrigation",
+      ],
       query_status: ["pending", "ai_answered", "expert_verified", "flagged"],
       user_role: ["farmer", "expert"],
     },
