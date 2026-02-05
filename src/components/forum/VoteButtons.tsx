@@ -11,9 +11,10 @@ interface VoteButtonsProps {
   commentId?: string;
   initialVotes: number;
   userVote?: number | null;
+  compact?: boolean;
 }
 
-export function VoteButtons({ postId, commentId, initialVotes, userVote }: VoteButtonsProps) {
+export function VoteButtons({ postId, commentId, initialVotes, userVote, compact }: VoteButtonsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [votes, setVotes] = useState(initialVotes);
@@ -84,6 +85,10 @@ export function VoteButtons({ postId, commentId, initialVotes, userVote }: VoteB
     }
   };
 
+  const buttonSize = compact ? 'h-6 w-6' : 'h-8 w-8';
+  const iconSize = compact ? 'h-4 w-4' : 'h-5 w-5';
+  const textSize = compact ? 'text-xs' : 'text-sm';
+
   return (
     <div className="flex flex-col items-center gap-0">
       <Button
@@ -92,16 +97,19 @@ export function VoteButtons({ postId, commentId, initialVotes, userVote }: VoteB
         onClick={() => handleVote(1)}
         disabled={loading}
         className={cn(
-          'h-8 w-8 p-0',
+          buttonSize,
+          'p-0 rounded-sm',
           currentVote === 1 && 'text-primary bg-primary/10'
         )}
       >
-        <ArrowBigUp className="h-5 w-5" />
+        <ArrowBigUp className={iconSize} />
       </Button>
       <span className={cn(
-        'text-sm font-medium',
+        textSize,
+        'font-bold',
         votes > 0 && 'text-primary',
-        votes < 0 && 'text-destructive'
+        votes < 0 && 'text-destructive',
+        votes === 0 && 'text-muted-foreground'
       )}>
         {votes}
       </span>
@@ -111,11 +119,12 @@ export function VoteButtons({ postId, commentId, initialVotes, userVote }: VoteB
         onClick={() => handleVote(-1)}
         disabled={loading}
         className={cn(
-          'h-8 w-8 p-0',
+          buttonSize,
+          'p-0 rounded-sm',
           currentVote === -1 && 'text-destructive bg-destructive/10'
         )}
       >
-        <ArrowBigDown className="h-5 w-5" />
+        <ArrowBigDown className={iconSize} />
       </Button>
     </div>
   );
