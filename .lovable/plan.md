@@ -1,81 +1,102 @@
 
-# Plan: Live Weather Data & Location-Based Search for Seeds
+
+# Plan: AI-Powered Weather & Location-Based Shop Search
 
 ## Overview
-This plan adds two major features:
-1. **Live Weather Data** - Replace mock weather with real-time data from OpenWeatherMap API
+This plan implements two features using the existing AI chatbot instead of external weather APIs:
+1. **AI-Powered Weather Predictions** - Use the AI chatbot with user coordinates to get weather insights and farming recommendations
 2. **Location-Based Seeds Search** - Add geographical filtering to the Shop page for seeds and products
 
 ---
 
-## Feature 1: Live Weather Data
+## Feature 1: AI-Powered Weather
 
-### Current State
-- Weather uses hardcoded mock data in `src/data/mockWeather.ts`
-- The Weather page (`src/pages/Weather.tsx`) displays static information
-- User profiles already store `latitude` and `longitude` fields
+### Approach
+Instead of calling an external weather API, we'll leverage the existing AI chatbot (`ai-chat` edge function) to provide weather-based farming guidance. When the user opens the Weather page, we'll:
+1. Get their coordinates (from profile or browser geolocation)
+2. Ask the AI chatbot for weather predictions and farming advice based on their location
+3. Display the AI's response in a structured weather format
 
-### Implementation Approach
-Create a backend function to fetch weather data securely (API key stays server-side), then update the frontend to use real data.
+### Why This Works
+- The AI model (Gemini) has access to general climate patterns for Indian regions
+- It can provide seasonal farming recommendations based on the location and time of year
+- No API key required - uses existing AI infrastructure
+- More personalized advice tailored to farming context
 
-### Changes Required
+### Implementation
 
-**1. Create Weather Edge Function**
-- New file: `supabase/functions/weather/index.ts`
-- Accepts user's latitude/longitude as parameters
-- Calls OpenWeatherMap API for current weather and 5-day forecast
-- Returns data in a format compatible with existing UI components
-- Uses Lovable AI to generate farming recommendations based on weather conditions
+**1. Create Weather Hook**
+File: `src/hooks/useWeather.ts`
+- Manages user location detection (browser or profile)
+- Sends structured prompts to the AI chatbot with coordinates
+- Parses AI responses into weather data format
+- Caches results to avoid repeated AI calls
 
-**2. Add OpenWeatherMap API Key**
-- Request user to add `OPENWEATHERMAP_API_KEY` secret
-- Free tier provides 60 calls/minute, sufficient for this use case
+**2. Create Weather Edge Function (optional enhancement)**
+File: `supabase/functions/weather-ai/index.ts`
+- Specialized prompt for weather predictions
+- Returns structured JSON with weather data
+- Uses tool calling to ensure consistent format
 
-**3. Create Weather Hook**
-- New file: `src/hooks/useWeather.ts`
-- Manages weather data fetching with loading/error states
-- Caches data to avoid excessive API calls
-- Uses user's profile location or browser geolocation
+**3. Update Weather Page**
+File: `src/pages/Weather.tsx`
+- Use the new weather hook instead of mock data
+- Add loading states while AI processes
+- Add location detection button
+- Display AI farming recommendations prominently
 
-**4. Update Weather Page**
-- Modify `src/pages/Weather.tsx` to use live data
-- Add loading skeleton and error states
-- Add location detection button if no location saved
+**4. Update Weather Card Component**
+File: `src/components/weather/WeatherCard.tsx`
+- Accept props for dynamic weather data
+- Show loading skeleton when fetching
 
-**5. Update Weather Components**
-- Update `src/components/weather/WeatherCard.tsx` for live data
-- Update `src/components/weather/WeatherAlert.tsx` for real alerts
+### AI Prompt Strategy
+The AI will receive a prompt like:
+```
+You are a weather and farming advisor for location: [lat, lng] near [city/district] in India.
+Current date: [date]
+Current season: [Rabi/Kharif/Zaid based on month]
+
+Provide weather prediction and farming advice in this JSON format:
+{
+  current: { temp, humidity, wind, condition, icon, rainChance },
+  forecast: [ { day, date, high, low, condition, icon, recommendation } ],
+  alerts: [ { type, title, message, action } ]
+}
+```
 
 ---
 
-## Feature 2: Location-Based Search for Seeds/Products
+## Feature 2: Location-Based Shop Search
 
-### Current State
-- Shop page (`src/pages/Shop.tsx`) has no location filtering
-- Products table has no location fields
-- Rental equipment already has location-based search (good reference)
+### Database Changes
+Add location columns to the `products` table:
+- `latitude` (numeric, nullable)
+- `longitude` (numeric, nullable)
+- `seller_location` (text, nullable)
 
-### Implementation Approach
-Add location fields to products table, then implement distance-based filtering similar to the rental equipment page.
+### Implementation
 
-### Database Changes Required
-Add location columns to products table:
-- `latitude` (nullable)
-- `longitude` (nullable) 
-- `seller_location` (text, nullable) - readable location name
-
-### Frontend Changes
-
-**1. Update Shop Page**
-- Add location detection button (similar to RentalEquipment page)
-- Add distance display next to products
-- Sort products by proximity when location is available
-- Add "Nearby Seeds" filter option
+**1. Database Migration**
+- Add location columns to products table
+- Update existing seed products with sample locations
 
 **2. Create Shared Location Utilities**
-- New file: `src/lib/location.ts`
+File: `src/lib/location.ts`
 - Extract `calculateDistance` function from RentalEquipment
-- Add geocoding helpers if needed
+- Add geolocation helper function
+- Reusable across Shop and RentalEquipment pages
+
+**3. Update Shop Page**
+File: `src/pages/Shop.tsx`
+- Add location detection button (similar to RentalEquipment)
+- Sort products by proximity when location available
+- Add distance display for products with coordinates
+
+**4. Update Product Card**
+File: `src/components/shop/ProductCard.tsx`
+- Accept optional `distance` prop
+- Display distance badge when available
 
 ---
 
@@ -86,16 +107,17 @@ Add location columns to products table:
 │                      Frontend                               │
 ├─────────────────────────────────────────────────────────────┤
 │  Weather Page          │  Shop Page                         │
-│  ├─ useWeather hook    │  ├─ useLocation hook               │
-│  ├─ WeatherCard        │  ├─ ProductCard (+ distance)       │
-│  └─ WeatherAlert       │  └─ CategoryFilter (+ nearby)      │
+│  ├─ useWeather hook    │  ├─ User location state            │
+│  ├─ AI chat prompt     │  ├─ calculateDistance()            │
+│  └─ Structured display │  └─ Sort by proximity              │
 └───────────┬─────────────────────────┬───────────────────────┘
             │                         │
             ▼                         ▼
 ┌───────────────────────┐   ┌─────────────────────────────────┐
-│  weather edge func    │   │  Supabase Database              │
-│  ├─ OpenWeatherMap    │   │  ├─ products (+ lat/lng)        │
-│  └─ AI recommendations│   │  └─ profiles (lat/lng exists)   │
+│  ai-chat edge func    │   │  Database                       │
+│  (existing)           │   │  products (+ lat/lng columns)   │
+│  ├─ Gemini AI         │   │                                 │
+│  └─ Weather prompt    │   │                                 │
 └───────────────────────┘   └─────────────────────────────────┘
 ```
 
@@ -103,52 +125,63 @@ Add location columns to products table:
 
 ## Implementation Steps
 
-### Step 1: Add API Key Secret
-Request user to configure OpenWeatherMap API key
+### Step 1: Database Migration
+Add location columns to products table
 
-### Step 2: Create Weather Edge Function
-Build the backend function to fetch and process weather data
+### Step 2: Create Shared Location Utilities
+- `src/lib/location.ts` with distance calculation and geolocation helpers
 
-### Step 3: Database Migration
-Add location columns to products table with seed data updates
+### Step 3: Create Weather Hook
+- `src/hooks/useWeather.ts` that calls AI chat with location-aware prompts
 
-### Step 4: Create Shared Utilities
-- `src/lib/location.ts` - distance calculation and geolocation
-- `src/hooks/useWeather.ts` - weather data management
+### Step 4: Update Weather Page
+- Replace mock data with AI-powered predictions
+- Add loading states and location detection
 
-### Step 5: Update Weather UI
-- Modify Weather page for live data with loading states
-- Update WeatherCard and WeatherAlert components
+### Step 5: Update Shop Page
+- Add location detection similar to RentalEquipment
+- Display distances and sort by proximity
 
-### Step 6: Update Shop UI
-- Add location detection to Shop page
-- Display distance for products with location
-- Add sorting by proximity
+### Step 6: Update Product Card
+- Show distance when available
 
 ---
 
 ## Files to Create
+
 | File | Purpose |
 |------|---------|
-| `supabase/functions/weather/index.ts` | Fetch live weather from OpenWeatherMap |
-| `src/hooks/useWeather.ts` | Weather data hook with caching |
-| `src/lib/location.ts` | Shared geolocation utilities |
+| `src/lib/location.ts` | Shared geolocation utilities (distance calc, detect location) |
+| `src/hooks/useWeather.ts` | AI-powered weather hook |
 
 ## Files to Modify
+
 | File | Changes |
 |------|---------|
-| `src/pages/Weather.tsx` | Use live data, add loading states |
-| `src/pages/Shop.tsx` | Add location filtering and distance display |
-| `src/components/weather/WeatherCard.tsx` | Accept props for live data |
-| `src/components/weather/WeatherAlert.tsx` | Accept props for live alerts |
-| `src/components/shop/ProductCard.tsx` | Display distance if available |
+| `src/pages/Weather.tsx` | Use AI for weather, add loading states, location detection |
+| `src/pages/Shop.tsx` | Add location detection, distance sorting |
+| `src/components/shop/ProductCard.tsx` | Add optional distance display |
+| `src/components/weather/WeatherCard.tsx` | Accept dynamic props |
 
 ## Database Changes
+
 | Table | New Columns |
 |-------|-------------|
 | `products` | `latitude`, `longitude`, `seller_location` |
 
 ---
 
-## User Action Required
-You'll need to provide an **OpenWeatherMap API key** for live weather data. You can get a free key at [openweathermap.org](https://openweathermap.org/api) (free tier: 60 calls/minute).
+## Benefits of AI-Powered Weather
+
+1. **No API key needed** - Uses existing Lovable AI infrastructure
+2. **Farming-focused** - AI provides contextual advice, not just raw data
+3. **Multi-language** - AI responds in user's preferred language
+4. **Seasonal awareness** - Understands Rabi/Kharif/Zaid seasons
+5. **Personalized** - Tailored to Indian farming conditions
+
+## Sample AI Weather Response
+The AI will provide responses like:
+- "Based on your location near Pune, Maharashtra, expect partly cloudy conditions with temperatures around 28-32°C"
+- "This is Rabi season - good time for wheat and chickpea sowing"
+- Alerts for monsoon onset, heat waves, or frost warnings
+
