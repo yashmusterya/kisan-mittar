@@ -1,9 +1,10 @@
-import { ShoppingCart, Tag } from 'lucide-react';
+import { ShoppingCart, Tag, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import GovtBadge from './GovtBadge';
+import { formatDistance } from '@/lib/location';
 
 interface Product {
   id: string;
@@ -18,6 +19,7 @@ interface Product {
   image_url: string | null;
   category: string;
   in_stock: boolean;
+  seller_location?: string | null;
   govt_offer?: {
     scheme_code: string;
     discount_percent: number;
@@ -31,9 +33,10 @@ interface ProductCardProps {
   product: Product;
   onAddToCart: (productId: string) => void;
   loading?: boolean;
+  distance?: number;
 }
 
-const ProductCard = ({ product, onAddToCart, loading }: ProductCardProps) => {
+const ProductCard = ({ product, onAddToCart, loading, distance }: ProductCardProps) => {
   const { language, t } = useLanguage();
 
   const getName = () => {
@@ -71,8 +74,16 @@ const ProductCard = ({ product, onAddToCart, loading }: ProductCardProps) => {
         
         {/* Discount badge */}
         {hasDiscount && (
-          <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground">
+          <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground">
             -{discountPercent}%
+          </Badge>
+        )}
+
+        {/* Distance badge */}
+        {distance !== undefined && (
+          <Badge variant="secondary" className="absolute top-2 right-2 text-xs gap-1 bg-background/80 backdrop-blur-sm">
+            <MapPin className="w-3 h-3" />
+            {formatDistance(distance)}
           </Badge>
         )}
 
@@ -91,7 +102,15 @@ const ProductCard = ({ product, onAddToCart, loading }: ProductCardProps) => {
         </Badge>
 
         {/* Name */}
-        <h3 className="font-medium text-sm line-clamp-2 mb-2">{getName()}</h3>
+        <h3 className="font-medium text-sm line-clamp-2 mb-1">{getName()}</h3>
+
+        {/* Seller location */}
+        {product.seller_location && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+            <MapPin className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{product.seller_location}</span>
+          </p>
+        )}
 
         {/* Govt offer badge */}
         {product.govt_offer && (
