@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import VoiceButton from '@/components/voice/VoiceButton';
 import ImageUpload from '@/components/chat/ImageUpload';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
+import ReactMarkdown from 'react-markdown';
 import { useVoiceOutput } from '@/hooks/useVoiceOutput';
 
 interface Message {
@@ -333,7 +334,13 @@ const Chat = () => {
                   className="w-full max-w-[200px] rounded-lg mb-2"
                 />
               )}
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              {message.role === 'assistant' ? (
+                <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-headings:text-foreground prose-strong:text-foreground">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
+              ) : (
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              )}
             </Card>
             {message.role === 'user' && (
               <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
