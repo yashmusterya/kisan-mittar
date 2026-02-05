@@ -28,6 +28,8 @@ const Forum = lazy(() => import("./pages/Forum"));
 const ForumPost = lazy(() => import("./pages/ForumPost"));
 const CreatePost = lazy(() => import("./pages/CreatePost"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const RentalEquipment = lazy(() => import("./pages/RentalEquipment"));
+const GovtSchemes = lazy(() => import("./pages/GovtSchemes"));
 
 // Layout
 import AppLayout from "@/components/layout/AppLayout";
@@ -125,6 +127,16 @@ const App = () => (
                   <Route path="/admin" element={
                     <Suspense fallback={<PageLoader />}>
                       <AdminDashboard />
+                    </Suspense>
+                  } />
+                  <Route path="/rentals" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <RentalEquipment />
+                    </Suspense>
+                  } />
+                  <Route path="/schemes" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <GovtSchemes />
                     </Suspense>
                   } />
                 </Route>

@@ -376,6 +376,78 @@ export type Database = {
           },
         ]
       }
+      government_schemes: {
+        Row: {
+          benefits_en: string | null
+          benefits_hi: string | null
+          benefits_mr: string | null
+          category: string
+          created_at: string
+          description_en: string
+          description_hi: string
+          description_mr: string
+          eligibility_en: string | null
+          eligibility_hi: string | null
+          eligibility_mr: string | null
+          how_to_apply_en: string | null
+          how_to_apply_hi: string | null
+          how_to_apply_mr: string | null
+          id: string
+          is_active: boolean
+          name_en: string
+          name_hi: string
+          name_mr: string
+          official_link: string | null
+          scheme_code: string
+        }
+        Insert: {
+          benefits_en?: string | null
+          benefits_hi?: string | null
+          benefits_mr?: string | null
+          category: string
+          created_at?: string
+          description_en: string
+          description_hi: string
+          description_mr: string
+          eligibility_en?: string | null
+          eligibility_hi?: string | null
+          eligibility_mr?: string | null
+          how_to_apply_en?: string | null
+          how_to_apply_hi?: string | null
+          how_to_apply_mr?: string | null
+          id?: string
+          is_active?: boolean
+          name_en: string
+          name_hi: string
+          name_mr: string
+          official_link?: string | null
+          scheme_code: string
+        }
+        Update: {
+          benefits_en?: string | null
+          benefits_hi?: string | null
+          benefits_mr?: string | null
+          category?: string
+          created_at?: string
+          description_en?: string
+          description_hi?: string
+          description_mr?: string
+          eligibility_en?: string | null
+          eligibility_hi?: string | null
+          eligibility_mr?: string | null
+          how_to_apply_en?: string | null
+          how_to_apply_hi?: string | null
+          how_to_apply_mr?: string | null
+          id?: string
+          is_active?: boolean
+          name_en?: string
+          name_hi?: string
+          name_mr?: string
+          official_link?: string | null
+          scheme_code?: string
+        }
+        Relationships: []
+      }
       govt_offers: {
         Row: {
           created_at: string
@@ -519,6 +591,72 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      rental_equipment: {
+        Row: {
+          category: string
+          contact_phone: string | null
+          created_at: string
+          daily_rate: number
+          description_en: string | null
+          description_hi: string | null
+          description_mr: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean
+          latitude: number | null
+          location: string
+          longitude: number | null
+          name_en: string
+          name_hi: string
+          name_mr: string
+          owner_id: string | null
+          updated_at: string
+          weekly_rate: number | null
+        }
+        Insert: {
+          category: string
+          contact_phone?: string | null
+          created_at?: string
+          daily_rate: number
+          description_en?: string | null
+          description_hi?: string | null
+          description_mr?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          name_en: string
+          name_hi: string
+          name_mr: string
+          owner_id?: string | null
+          updated_at?: string
+          weekly_rate?: number | null
+        }
+        Update: {
+          category?: string
+          contact_phone?: string | null
+          created_at?: string
+          daily_rate?: number
+          description_en?: string | null
+          description_hi?: string | null
+          description_mr?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          name_en?: string
+          name_hi?: string
+          name_mr?: string
+          owner_id?: string | null
+          updated_at?: string
+          weekly_rate?: number | null
         }
         Relationships: []
       }

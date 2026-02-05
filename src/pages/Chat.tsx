@@ -46,8 +46,8 @@ const Chat = () => {
   const { isListening, isSupported: sttSupported, startListening, stopListening, transcript } = useVoiceInput({
     onResult: (result) => {
       setInput(result);
-      // Auto-send after voice input
-      setTimeout(() => handleSend(result), 500);
+      // Auto-send after voice input completes
+      handleSend(result);
     },
     onError: (error) => toast.error(error),
     silenceTimeout: 2500,
