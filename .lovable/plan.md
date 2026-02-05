@@ -1,354 +1,292 @@
 
-# KisaanMitra 2.0 - Comprehensive Enhancement Plan
+# Enhancement Plan: Dark Theme, Forum & Role System
 
 ## Overview
-This plan transforms KisaanMitra into a complete, production-ready mobile-first agricultural assistant with voice AI, farmer marketplace, enhanced UI/UX, and performance optimizations. The implementation is structured into 8 phases for systematic development.
+This plan adds three major features to KisaanMitra:
+1. **Dark Theme Switch** - Toggle between light and dark modes
+2. **Community Forum** - Reddit-style discussion platform for farmers
+3. **Role-Based Access Control** - Admin, Farmer, and Seller roles with proper security
 
 ---
 
-## Phase 1: Database Schema Extension
+## Phase 1: Role System (Secure Implementation)
 
-### New Tables Required
+### Database Changes
+Create a separate `user_roles` table following security best practices (roles MUST NOT be stored in profiles table to prevent privilege escalation):
 
 ```text
++-------------------+     +-------------------+
+|   user_roles      |     |   app_role enum   |
++-------------------+     +-------------------+
+| id (uuid)         |     | 'admin'           |
+| user_id (ref auth)|     | 'farmer'          |
+| role (app_role)   |     | 'seller'          |
+| created_at        |     +-------------------+
++-------------------+
+```
+
+### Security Function
+Create a `has_role()` security definer function to check roles without RLS recursion:
+
+```text
+has_role(user_id, role) -> boolean
+- SECURITY DEFINER (bypasses RLS safely)
+- Used in all RLS policies
+```
+
+### Admin Capabilities
+- View all users and their roles
+- Grant/revoke roles to any user
+- Access to all forum posts (moderate)
+- Access to user management page
+
+### New Page: AdminDashboard.tsx
+- User management table
+- Role assignment dropdown
+- Statistics overview
+
+---
+
+## Phase 2: Dark Theme Switch
+
+### Implementation Approach
+The app already has dark theme CSS variables defined in `index.css`. We'll use `next-themes` (already installed) to manage theme state.
+
+### New Component: ThemeToggle.tsx
+```text
++---------------------------+
+|  [Sun/Moon Icon]          |
+|  Toggle button in Header  |
++---------------------------+
+```
+
+### Changes Required
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Wrap with ThemeProvider |
+| `src/components/layout/Header.tsx` | Add ThemeToggle button |
+| `src/components/ui/ThemeToggle.tsx` | New component with Sun/Moon icons |
+| `index.html` | Add script to prevent flash |
+
+### Theme Persistence
+- Saved to localStorage
+- Respects system preference initially
+- Smooth transition animation
+
+---
+
+## Phase 3: Community Forum
+
+### Database Schema
+```text
 +-------------------+     +-------------------+     +-------------------+
-|     products      |     |   govt_offers     |     | weather_alerts    |
+|   forum_posts     |     |  forum_comments   |     |   forum_votes     |
 +-------------------+     +-------------------+     +-------------------+
 | id (uuid)         |     | id (uuid)         |     | id (uuid)         |
-| name_en/hi/mr     |     | name_en/hi/mr     |     | user_id (uuid)    |
-| description       |     | description       |     | alert_type        |
-| category          |     | scheme_code       |     | title/message     |
-| price             |     | discount_percent  |     | severity          |
-| discounted_price  |     | eligibility       |     | location          |
-| image_url         |     | valid_until       |     | is_read           |
-| govt_offer_id     |     | created_at        |     | created_at        |
-| in_stock          |     +-------------------+     +-------------------+
-| created_at        |
-+-------------------+
-
-+-------------------+
-|   cart_items      |
-+-------------------+
-| id (uuid)         |
-| user_id           |
-| product_id        |
-| quantity          |
+| user_id           |     | post_id           |     | user_id           |
+| title             |     | user_id           |     | post_id (nullable)|
+| content           |     | content           |     | comment_id        |
+| category          |     | created_at        |     | vote_type (+1/-1) |
+| image_url         |     +-------------------+     | created_at        |
+| votes_count       |                               +-------------------+
+| comments_count    |
 | created_at        |
 +-------------------+
 ```
 
-### Product Categories (Enum)
-- seeds
-- fertilizers
-- pesticides
-- tools
-- irrigation
-
-### Sample Data
-Products with government subsidies (e.g., "Neem Oil Pesticide - Rs. 350, Discounted: Rs. 250, 50% subsidy under PMKSY")
-
----
-
-## Phase 2: Voice AI Integration
-
-### Technology Approach
-Use Web Speech API (native browser support) for voice input/output:
-- **SpeechRecognition API** for voice-to-text
-- **SpeechSynthesis API** for text-to-speech
-
-### New Component: VoiceButton
-```text
-+------------------------+
-|   VoiceButton.tsx      |
-+------------------------+
-| - Microphone icon      |
-| - Pulse animation      |
-| - Language detection   |
-| - Auto-stop on silence |
-+------------------------+
-```
-
-### Voice Features
-1. **Voice Input** - Tap microphone, speak question
-2. **Voice Output** - AI reads response aloud
-3. **Language Support**:
-   - English: en-IN
-   - Hindi: hi-IN
-   - Marathi: mr-IN
-4. **Slow, clear speech** rate for farmer-friendly output
-
-### Implementation
-- Create `src/hooks/useVoiceInput.ts` - Custom hook for speech recognition
-- Create `src/hooks/useVoiceOutput.ts` - Custom hook for text-to-speech
-- Create `src/components/voice/VoiceButton.tsx` - Animated voice input button
-- Create `src/components/voice/VoiceSettings.tsx` - Voice speed/enable toggle
-
----
-
-## Phase 3: Farmer Marketplace (Shop)
-
-### New Page: Shop.tsx
-```text
-+--------------------------------+
-|  [Search Bar]           [Cart] |
-+--------------------------------+
-| Categories:                    |
-| [Seeds][Fertilizers][Tools]... |
-+--------------------------------+
-| Product Grid:                  |
-| +--------+ +--------+          |
-| | Image  | | Image  |          |
-| | Name   | | Name   |          |
-| | Rs.350 | | Rs.250 |          |
-| | -30%   | | PMKSY  |          |
-| [Add]    | [Add]    |          |
-| +--------+ +--------+          |
-+--------------------------------+
-```
+### Forum Categories (Enum)
+- crops - Crop-related discussions
+- pests - Pest and disease problems
+- market - Selling/buying tips
+- weather - Weather discussions
+- general - General farming topics
 
 ### New Pages
-1. **Shop.tsx** - Product listing with filters
-2. **ProductDetail.tsx** - Individual product page
-3. **Cart.tsx** - Shopping cart with totals
-4. **GovtSchemes.tsx** - Government schemes info
+| Page | Purpose |
+|------|---------|
+| `Forum.tsx` | Main forum feed with filters |
+| `ForumPost.tsx` | Individual post with comments |
+| `CreatePost.tsx` | New post form |
 
-### Components
-- `src/components/shop/ProductCard.tsx`
-- `src/components/shop/CategoryFilter.tsx`
-- `src/components/shop/CartButton.tsx`
-- `src/components/shop/GovtBadge.tsx`
-
-### Sample Products (Mock Data)
-```
-1. Hybrid Tomato Seeds - Rs. 150
-2. Neem Oil Pesticide - Rs. 350 → Rs. 250 (PMKSY subsidy)
-3. DAP Fertilizer 50kg - Rs. 1350 → Rs. 1150 (Govt. subsidy)
-4. Drip Irrigation Kit - Rs. 2500 → Rs. 1250 (50% PMKSY)
-5. Manual Sprayer 16L - Rs. 800
-```
-
----
-
-## Phase 4: UI/UX Redesign
-
-### Updated Footer Navigation
-```text
-+--------------------------------------------------+
-|  [Home]  [AI Chat]  [Shop]  [Alerts]  [Profile]  |
-+--------------------------------------------------+
-   🏠        💬        🛒       🔔        👤
-```
-
-### Design Improvements
-1. **Large Touch Targets** - Minimum 48x48px for all buttons
-2. **High Contrast** - Dark text on light backgrounds for sunlight visibility
-3. **Icon-First Design** - Visual icons for low-literacy users
-4. **Loading States** - Skeleton loaders for content > 1.5s
+### Forum Features
+1. **Feed View** - Sorted by: Hot, New, Top
+2. **Category Filters** - Filter by topic
+3. **Upvote/Downvote** - Like Reddit
+4. **Comments** - Nested replies
+5. **User Attribution** - Show role badges (Farmer, Seller, Admin)
+6. **Multilingual** - Post in any supported language
 
 ### New Components
-- `src/components/ui/IconButton.tsx` - Large touchable icon buttons
-- `src/components/ui/LoadingSkeleton.tsx` - Content placeholders
-- `src/components/common/EmptyState.tsx` - Friendly empty states
+```text
+src/components/forum/
+  ├── PostCard.tsx        # Forum post preview
+  ├── CommentSection.tsx  # Comments list
+  ├── VoteButtons.tsx     # Upvote/downvote
+  ├── CategoryBadge.tsx   # Topic indicator
+  └── RoleBadge.tsx       # User role display
+```
+
+---
+
+## Phase 4: Navigation Updates
 
 ### Updated MobileNav
-- 5 tabs: Home, AI Chat, Shop, Alerts (Weather), Profile
-- Active state highlighting
-- Badge for unread alerts
+Add Forum to the 5-tab navigation:
 
----
-
-## Phase 5: Performance Optimization
-
-### Target: All interactions ≤ 2 seconds
-
-### Strategies
-1. **AI Response Caching**
-   - Cache common questions in localStorage
-   - Check cache before API call
-   - Cache TTL: 24 hours
-
-2. **Optimistic UI Updates**
-   - Show user message immediately
-   - Display loading indicator
-   - Stream AI response when available
-
-3. **Lazy Loading**
-   - React.lazy() for route-level code splitting
-   - Intersection Observer for images
-   - Skeleton components during load
-
-4. **API Optimization**
-   - Debounce search inputs (300ms)
-   - Limit AI context to last 6 messages
-   - Compress requests
-
-### Loading States
 ```text
-+------------------------+
-|  ○○○○○○○○○○○○○○○○○    | <- Skeleton
-|  ○○○○○○○○○○           |
-|  ○○○○○○○○○○○○○○       |
-+------------------------+
-Shown when response > 1.5s
++--------------------------------------------------+
+|  [Home]  [Chat]  [Forum]  [Shop]  [Profile]      |
++--------------------------------------------------+
+   🏠       💬       👥       🛒       👤
 ```
+
+### Header Updates
+- Add theme toggle (Sun/Moon icon)
+- Show admin badge for admins
 
 ---
 
-## Phase 6: Enhanced AI Chatbot
-
-### Updated Edge Function
-- Add FAQ caching layer
-- Include voice output flag
-- Add response time tracking
-- Implement prompt injection protection
-
-### New AI Capabilities
-1. **Government Scheme Awareness** - Information about PM-KISAN, PMFBY, etc.
-2. **Product Recommendations** - Suggest relevant products from shop
-3. **Cached FAQ Responses** - Instant answers for common questions
-
-### AI Response Structure
-```
-{
-  response: string,
-  voiceResponse?: string,  // Simplified for TTS
-  suggestedProducts?: string[],
-  relatedFAQs?: string[],
-  responseTime: number
-}
-```
-
----
-
-## Phase 7: Security Enhancements
-
-### Implemented Protections
-
-| Risk | Mitigation |
-|------|------------|
-| API Abuse | Rate limiting (10 req/min per user) |
-| Prompt Injection | Input sanitization + system prompt hardening |
-| Role Bypass | Server-side role verification |
-| Data Exposure | RLS policies on all tables |
-| XSS | Input sanitization |
-
-### Rate Limiting
-Add to ai-chat edge function:
-- Track requests per user_id
-- Return 429 after 10 requests/minute
-- Graceful error messages
-
-### Input Validation
-- Max message length: 1000 characters
-- Sanitize HTML/scripts
-- Block SQL-like patterns
-
----
-
-## Phase 8: Translation Updates
+## Phase 5: Translation Updates
 
 ### New Translation Keys
 ```text
-// Shop
-'shop.title': 'Shop / दुकान / दुकान'
-'shop.addToCart': 'Add / जोड़ें / जोडा'
-'shop.govtOffer': 'Govt. Subsidy / सरकारी छूट / सरकारी सवलत'
-'shop.cart': 'Cart / कार्ट / कार्ट'
+// Theme
+'theme.light': 'Light / लाइट / प्रकाश / ಬೆಳಕು'
+'theme.dark': 'Dark / डार्क / गडद / ಡಾರ್ಕ್'
 
-// Voice
-'voice.tapToSpeak': 'Tap to speak / बोलने के लिए टैप करें / बोलण्यासाठी टॅप करा'
-'voice.listening': 'Listening... / सुन रहे हैं... / ऐकत आहे...'
-'voice.speakNow': 'Speak now / अब बोलें / आता बोला'
+// Forum
+'forum.title': 'Community / समुदाय / समुदाय / ಸಮುದಾಯ'
+'forum.createPost': 'Create Post / पोस्ट बनाएं'
+'forum.comments': 'Comments / टिप्पणियां'
+'forum.upvote': 'Upvote / पसंद'
+'forum.categories.*': [crops, pests, market, weather, general]
 
-// Alerts
-'alerts.title': 'Alerts / अलर्ट / इशारे'
-'alerts.noAlerts': 'No active alerts / कोई अलर्ट नहीं / कोणतेही इशारे नाहीत'
+// Roles
+'roles.admin': 'Admin / व्यवस्थापक'
+'roles.farmer': 'Farmer / किसान'
+'roles.seller': 'Seller / विक्रेता'
+
+// Admin
+'admin.title': 'Admin Panel / एडमिन पैनल'
+'admin.manageUsers': 'Manage Users / उपयोगकर्ता प्रबंधित करें'
+'admin.assignRole': 'Assign Role / भूमिका असाइन करें'
 ```
 
 ---
 
 ## File Changes Summary
 
-### New Files to Create
+### New Files
 | File | Purpose |
 |------|---------|
-| `src/pages/Shop.tsx` | Farmer marketplace |
-| `src/pages/ProductDetail.tsx` | Product details |
-| `src/pages/Cart.tsx` | Shopping cart |
-| `src/pages/GovtSchemes.tsx` | Government schemes |
-| `src/hooks/useVoiceInput.ts` | Speech recognition hook |
-| `src/hooks/useVoiceOutput.ts` | Text-to-speech hook |
-| `src/hooks/useAICache.ts` | Response caching |
-| `src/components/voice/VoiceButton.tsx` | Voice input UI |
-| `src/components/shop/ProductCard.tsx` | Product display |
-| `src/components/shop/CategoryFilter.tsx` | Category tabs |
-| `src/components/shop/CartButton.tsx` | Cart icon with badge |
-| `src/components/shop/GovtBadge.tsx` | Subsidy indicator |
-| `src/data/mockProducts.ts` | Sample product data |
-| `src/data/mockSchemes.ts` | Government schemes |
+| `src/components/ui/ThemeToggle.tsx` | Dark/light toggle |
+| `src/pages/Forum.tsx` | Forum main page |
+| `src/pages/ForumPost.tsx` | Single post view |
+| `src/pages/CreatePost.tsx` | New post creation |
+| `src/pages/AdminDashboard.tsx` | Admin panel |
+| `src/components/forum/PostCard.tsx` | Post preview |
+| `src/components/forum/CommentSection.tsx` | Comments |
+| `src/components/forum/VoteButtons.tsx` | Voting UI |
+| `src/components/forum/CategoryBadge.tsx` | Category tag |
+| `src/components/forum/RoleBadge.tsx` | Role indicator |
+| `src/hooks/useUserRole.ts` | Role checking hook |
 
-### Files to Modify
+### Modified Files
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add Shop, Cart, Schemes routes |
-| `src/components/layout/MobileNav.tsx` | Update to 5-tab footer |
-| `src/pages/Chat.tsx` | Add voice input/output, caching |
-| `src/contexts/LanguageContext.tsx` | Add shop/voice translations |
-| `supabase/functions/ai-chat/index.ts` | Rate limiting, caching |
+| `src/App.tsx` | Add ThemeProvider, Forum routes, Admin route |
+| `src/components/layout/Header.tsx` | Add theme toggle |
+| `src/components/layout/MobileNav.tsx` | Add Forum tab, dynamic for admin |
+| `src/contexts/LanguageContext.tsx` | Add forum/admin translations |
+| `src/contexts/AuthContext.tsx` | Remove role from Profile type (security) |
 
 ### Database Migration
-Add tables: products, govt_offers, cart_items, weather_alerts
+- Create `app_role` enum (admin, farmer, seller)
+- Create `user_roles` table with RLS
+- Create `has_role()` security definer function
+- Create `forum_posts`, `forum_comments`, `forum_votes` tables
+- Create `forum_category` enum
+- Add RLS policies for all new tables
+- Seed initial admin user
 
 ---
 
-## Demo Flow Script
+## Security Considerations
+
+### Role System
+1. **Separate Table** - Roles stored in `user_roles`, NOT in profiles
+2. **Security Definer** - `has_role()` function prevents RLS recursion
+3. **Server-Side Validation** - Never trust client-side role checks
+4. **RLS Policies** - All tables protected with proper policies
+
+### Forum Security
+1. **User Attribution** - Posts tied to authenticated users
+2. **Edit/Delete** - Only post owner or admin can modify
+3. **Rate Limiting** - Prevent spam (10 posts/hour)
+4. **Content Moderation** - Admin can remove posts
+
+### Admin Panel
+1. **Protected Route** - Only accessible to admins
+2. **Role Check** - Server-side verification via `has_role()`
+3. **Audit Trail** - Log role changes (future enhancement)
+
+---
+
+## User Flow Examples
+
+### Farmer Creates Post
+1. Navigate to Forum tab
+2. Tap "Create Post" button
+3. Select category (e.g., "pests")
+4. Write title and content
+5. Optionally attach image
+6. Submit -> Post appears in feed
+
+### Admin Assigns Role
+1. Login as admin
+2. Navigate to Admin Dashboard
+3. Search for user
+4. Select role from dropdown
+5. Confirm -> Role updated immediately
+
+### Dark Mode Toggle
+1. Tap moon icon in header
+2. Theme switches instantly
+3. Preference saved to localStorage
+4. Persists across sessions
+
+---
+
+## Technical Architecture
 
 ```text
-1. Open app → Welcome screen with KisaanMitra logo
-2. Select Hindi language → "हिंदी चुनें"
-3. Sign up as farmer → Quick profile setup
-4. Dashboard shows → Weather alert banner + daily tip
-5. Tap microphone → "मेरी टमाटर की पत्तियां पीली हो रही हैं"
-6. AI responds → Voice reads solution aloud
-7. Get product suggestion → "Neem oil recommended"
-8. Navigate to Shop → Browse products with subsidies
-9. Add to cart → See government discount applied
-10. Check weather alerts → Rain warning visible
-11. View expert verification → Badge on verified answers
+                    +------------------+
+                    |   ThemeProvider  |
+                    |  (next-themes)   |
+                    +--------+---------+
+                             |
+              +--------------+--------------+
+              |                             |
+    +---------v---------+         +---------v---------+
+    |      Header       |         |     App Routes    |
+    | (ThemeToggle)     |         +---------+---------+
+    +-------------------+                   |
+                               +------------+------------+
+                               |            |            |
+                        +------v--+   +-----v-----+  +---v---+
+                        | Forum   |   | Admin     |  | ...   |
+                        | Pages   |   | Dashboard |  |       |
+                        +---------+   +-----------+  +-------+
 ```
 
 ---
 
-## Pitch Line (Judge-Ready)
+## Implementation Priority
 
-> "KisaanMitra is an AI-powered, voice-enabled agricultural assistant with multilingual support, weather alerts, affordable tool shopping with government subsidies, and expert verification - built for speed, simplicity, and real farmer needs."
-
----
-
-## Technical Details
-
-### Voice Recognition Languages
-```typescript
-const langCodes = {
-  en: 'en-IN',
-  hi: 'hi-IN',
-  mr: 'mr-IN'
-};
-```
-
-### Performance Targets
-- Initial load: < 3s on 3G
-- AI response: < 2s (cached: instant)
-- Page transitions: < 300ms
-- Image lazy load: on scroll
-
-### Security Headers
-```typescript
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'X-RateLimit-Limit': '10',
-  'X-Content-Type-Options': 'nosniff'
-};
-```
-
-This plan covers all requirements for a hackathon-winning, production-ready agricultural assistant optimized for Indian farmers.
+1. **Database Migration** - Create role system and forum tables
+2. **Theme Toggle** - Quick win, visible improvement
+3. **Role System** - Security foundation
+4. **Forum Basic** - Posts and feed
+5. **Forum Comments** - Engagement features
+6. **Admin Dashboard** - User management
+7. **Translations** - Multilingual support
