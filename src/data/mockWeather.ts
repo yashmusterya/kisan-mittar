@@ -21,21 +21,24 @@
    alerts: Array<{
      id: string;
      type: 'warning' | 'info' | 'danger';
-     title: {
-       en: string;
-       hi: string;
-       mr: string;
-     };
-     message: {
-       en: string;
-       hi: string;
-       mr: string;
-     };
-     action: {
-       en: string;
-       hi: string;
-       mr: string;
-     };
+      title: {
+        en: string;
+        hi: string;
+        mr: string;
+        kn?: string;
+      };
+      message: {
+        en: string;
+        hi: string;
+        mr: string;
+        kn?: string;
+      };
+      action: {
+        en: string;
+        hi: string;
+        mr: string;
+        kn?: string;
+      };
    }>;
  }
  
@@ -139,20 +142,24 @@
    };
  };
  
- export const getDailyTip = (language: 'en' | 'hi' | 'mr'): { title: string; tip: string } => {
-   const tips = {
-     en: {
-       title: "Today's Farming Tip",
-       tip: "February is ideal for wheat irrigation. Apply 2nd irrigation 40-45 days after sowing. Maintain soil moisture for better grain development.",
-     },
-     hi: {
-       title: 'आज की खेती टिप',
-       tip: 'फरवरी गेहूं की सिंचाई के लिए आदर्श है। बुवाई के 40-45 दिन बाद दूसरी सिंचाई करें। बेहतर दाने के विकास के लिए मिट्टी की नमी बनाए रखें।',
-     },
-     mr: {
-       title: 'आजची शेती टिप',
-       tip: 'फेब्रुवारी गव्हाच्या सिंचनासाठी आदर्श आहे. पेरणीनंतर 40-45 दिवसांनी दुसरे पाणी द्या. चांगल्या दाण्यांसाठी मातीतील ओलावा टिकवा.',
-     },
-   };
-   return tips[language];
- };
+export const getDailyTip = (language: 'en' | 'hi' | 'mr' | 'kn'): { title: string; tip: string } => {
+  const tips = {
+    en: {
+      title: "Today's Farming Tip",
+      tip: "February is ideal for wheat irrigation. Apply 2nd irrigation 40-45 days after sowing. Maintain soil moisture for better grain development.",
+    },
+    hi: {
+      title: 'आज की खेती टिप',
+      tip: 'फरवरी गेहूं की सिंचाई के लिए आदर्श है। बुवाई के 40-45 दिन बाद दूसरी सिंचाई करें। बेहतर दाने के विकास के लिए मिट्टी की नमी बनाए रखें।',
+    },
+    mr: {
+      title: 'आजची शेती टिप',
+      tip: 'फेब्रुवारी गव्हाच्या सिंचनासाठी आदर्श आहे. पेरणीनंतर 40-45 दिवसांनी दुसरे पाणी द्या. चांगल्या दाण्यांसाठी मातीतील ओलावा टिकवा.',
+    },
+    kn: {
+      title: 'ಇಂದಿನ ಕೃಷಿ ಸಲಹೆ',
+      tip: 'ಫೆಬ್ರವರಿ ಗೋಧಿ ನೀರಾವರಿಗೆ ಸೂಕ್ತ. ಬಿತ್ತನೆಯ 40-45 ದಿನಗಳ ನಂತರ 2ನೇ ನೀರಾವರಿ ನೀಡಿ. ಉತ್ತಮ ಧಾನ್ಯ ಬೆಳವಣಿಗೆಗೆ ಮಣ್ಣಿನ ತೇವಾಂಶ ಕಾಪಾಡಿ.',
+    },
+  };
+  return tips[language];
+};

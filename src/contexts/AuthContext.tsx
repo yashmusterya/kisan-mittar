@@ -7,7 +7,7 @@ interface Profile {
   user_id: string;
   full_name: string;
   role: 'farmer' | 'expert' | 'admin';
-  language: 'en' | 'hi' | 'mr';
+  language: 'en' | 'hi' | 'mr' | 'kn';
   location: string | null;
   primary_crop: string | null;
   latitude: number | null;
@@ -22,7 +22,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, metadata: {
     full_name: string;
     role: 'farmer' | 'expert';
-    language: 'en' | 'hi' | 'mr';
+    language: 'en' | 'hi' | 'mr' | 'kn';
     location?: string;
     primary_crop?: string;
   }) => Promise<{ error: Error | null }>;
