@@ -1,22 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, MessageCircle, ShoppingBag, Bell, User } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Home, MessageCircle, ShoppingBag, Users, User, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const MobileNav = () => {
   const location = useLocation();
   const { t } = useLanguage();
   const { profile } = useAuth();
+  const { isAdmin } = useUserRole();
 
   const isExpert = profile?.role === 'expert';
 
   const navItems = [
     { path: '/dashboard', icon: Home, label: t('nav.home') },
     { path: '/chat', icon: MessageCircle, label: t('nav.chat') },
+    { path: '/forum', icon: Users, label: t('nav.community') },
     { path: '/shop', icon: ShoppingBag, label: t('nav.shop') },
-    { path: '/alerts', icon: Bell, label: t('nav.alerts') },
-    { path: isExpert ? '/expert' : '/profile', icon: User, label: t('nav.profile') },
+    { path: isAdmin ? '/admin' : isExpert ? '/expert' : '/profile', icon: isAdmin ? Shield : User, label: isAdmin ? t('nav.admin') : t('nav.profile') },
   ];
 
   return (

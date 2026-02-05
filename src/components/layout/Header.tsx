@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import logo from '@/assets/logo.png';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -52,15 +53,18 @@ const Header = () => {
                     <span className="font-bold text-lg">Kisaan Mitra</span>
                 </div>
 
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/profile')}
-                    className="flex items-center gap-1 text-xs bg-background/20 px-2 py-1 rounded-full hover:bg-background/30"
-                >
-                    <MapPin className="w-3 h-3" />
-                    <span>{userLocation}</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/profile')}
+                        className="flex items-center gap-1 text-xs bg-background/20 px-2 py-1 rounded-full hover:bg-background/30"
+                    >
+                        <MapPin className="w-3 h-3" />
+                        <span>{userLocation}</span>
+                    </Button>
+                </div>
             </div>
         </header>
     );
