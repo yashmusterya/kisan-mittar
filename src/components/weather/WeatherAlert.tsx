@@ -15,6 +15,13 @@ const WeatherAlert = ({ alertData, loading: externalLoading }: WeatherAlertProps
   
   const isLoading = externalLoading ?? hookLoading;
   const alert = alertData ?? weather?.alerts?.[0];
+
+  // Safe accessor for multilingual alert fields
+  const getAlertText = (field: Record<string, string> | string | undefined, fallback: string = ''): string => {
+    if (!field) return fallback;
+    if (typeof field === 'string') return field;
+    return field[language as Language] || field.en || fallback;
+  };
   
   if (isLoading) {
     return (
@@ -33,7 +40,7 @@ const WeatherAlert = ({ alertData, loading: externalLoading }: WeatherAlertProps
   
   if (!alert) return null;
 
-  const getAlertIcon = (type: string) => {
+  const getAlertIcon = (type: string | undefined) => {
     switch (type) {
       case 'danger':
         return <AlertCircle className="w-5 h-5" />;
@@ -44,7 +51,7 @@ const WeatherAlert = ({ alertData, loading: externalLoading }: WeatherAlertProps
     }
   };
 
-  const getAlertStyles = (type: string) => {
+  const getAlertStyles = (type: string | undefined) => {
     switch (type) {
       case 'danger':
         return 'bg-destructive/10 border-destructive/30 text-destructive';
@@ -63,13 +70,13 @@ const WeatherAlert = ({ alertData, loading: externalLoading }: WeatherAlertProps
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-foreground">
-            {alert.title[language as Language] || alert.title.en}
+            {getAlertText(alert.title, 'Weather Alert')}
           </h4>
           <p className="text-sm text-muted-foreground mt-1">
-            {alert.message[language as Language] || alert.message.en}
+            {getAlertText(alert.message, 'Check weather conditions')}
           </p>
           <p className="text-sm font-medium mt-2">
-            👉 {alert.action[language as Language] || alert.action.en}
+            👉 {getAlertText(alert.action, 'Stay prepared')}
           </p>
         </div>
       </div>
