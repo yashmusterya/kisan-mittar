@@ -84,6 +84,9 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
   
   const recognitionRef = useRef<SpeechRecognitionType | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Accumulate all final transcripts during a session
+  const accumulatedTranscriptRef = useRef<string>('');
+  const hasCalledResultRef = useRef<boolean>(false);
   
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
@@ -100,8 +103,14 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
+      
+      // Call onResult with the accumulated transcript when stopping
+      if (accumulatedTranscriptRef.current.trim() && onResult && !hasCalledResultRef.current) {
+        hasCalledResultRef.current = true;
+        onResult(accumulatedTranscriptRef.current.trim());
+      }
     }
-  }, [clearSilenceTimer]);
+  }, [clearSilenceTimer, onResult]);
 
   const resetSilenceTimer = useCallback(() => {
     clearSilenceTimer();
@@ -122,6 +131,8 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
 
     setError(null);
     setTranscript('');
+    accumulatedTranscriptRef.current = '';
+    hasCalledResultRef.current = false;
 
     const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognitionClass();
@@ -139,24 +150,21 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
     recognition.onresult = (event: SpeechRecognitionEventType) => {
       resetSilenceTimer();
       
-      let finalTranscript = '';
       let interimTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+          // Accumulate final transcripts
+          accumulatedTranscriptRef.current += result[0].transcript + ' ';
         } else {
           interimTranscript += result[0].transcript;
         }
       }
 
-      const currentTranscript = finalTranscript || interimTranscript;
-      setTranscript(currentTranscript);
-
-      if (finalTranscript && onResult) {
-        onResult(finalTranscript);
-      }
+      // Show accumulated + interim for display
+      const displayTranscript = (accumulatedTranscriptRef.current + interimTranscript).trim();
+      setTranscript(displayTranscript);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEventType) => {
@@ -188,6 +196,12 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
     recognition.onend = () => {
       setIsListening(false);
       clearSilenceTimer();
+      
+      // Call onResult when recognition ends naturally (e.g., silence timeout)
+      if (accumulatedTranscriptRef.current.trim() && onResult && !hasCalledResultRef.current) {
+        hasCalledResultRef.current = true;
+        onResult(accumulatedTranscriptRef.current.trim());
+      }
     };
 
     recognitionRef.current = recognition;
