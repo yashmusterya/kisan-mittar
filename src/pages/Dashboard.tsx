@@ -1,39 +1,54 @@
- import { Link } from 'react-router-dom';
- import { useLanguage } from '@/contexts/LanguageContext';
- import { useAuth } from '@/contexts/AuthContext';
- import { Card, CardContent } from '@/components/ui/card';
- import { Button } from '@/components/ui/button';
- import WeatherCard from '@/components/weather/WeatherCard';
- import WeatherAlert from '@/components/weather/WeatherAlert';
- import { getDailyTip } from '@/data/mockWeather';
- import { MessageCircle, HelpCircle, History, Lightbulb, ChevronRight } from 'lucide-react';
- 
- const Dashboard = () => {
-   const { language, t } = useLanguage();
-   const { profile } = useAuth();
- 
-   const dailyTip = getDailyTip(language);
- 
-   const quickActions = [
-     {
-       to: '/chat',
-       icon: MessageCircle,
-       label: t('dashboard.askAI'),
-       color: 'bg-primary/10 text-primary',
-     },
-     {
-       to: '/faq',
-       icon: HelpCircle,
-       label: t('dashboard.faqs'),
-       color: 'bg-accent/10 text-accent',
-     },
-     {
-       to: '/questions',
-       icon: History,
-       label: t('dashboard.myQuestions'),
-       color: 'bg-secondary/10 text-secondary',
-     },
-   ];
+import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import WeatherCard from '@/components/weather/WeatherCard';
+import WeatherAlert from '@/components/weather/WeatherAlert';
+import { getDailyTip } from '@/data/mockWeather';
+import { MessageCircle, HelpCircle, History, Lightbulb, ChevronRight, Tractor, Landmark } from 'lucide-react';
+
+const Dashboard = () => {
+  const { language, t } = useLanguage();
+  const { profile } = useAuth();
+
+  const dailyTip = getDailyTip(language);
+
+  const quickActions = [
+    {
+      to: '/chat',
+      icon: MessageCircle,
+      label: t('dashboard.askAI'),
+      color: 'bg-primary/10 text-primary',
+    },
+    {
+      to: '/rentals',
+      icon: Tractor,
+      label: language === 'hi' ? 'किराया उपकरण' : language === 'mr' ? 'भाड्याची उपकरणे' : 'Rent Equipment',
+      color: 'bg-accent/10 text-accent-foreground',
+    },
+    {
+      to: '/schemes',
+      icon: Landmark,
+      label: language === 'hi' ? 'सरकारी योजनाएं' : language === 'mr' ? 'सरकारी योजना' : 'Govt Schemes',
+      color: 'bg-secondary text-secondary-foreground',
+    },
+  ];
+
+  const moreActions = [
+    {
+      to: '/faq',
+      icon: HelpCircle,
+      label: t('dashboard.faqs'),
+      color: 'bg-muted text-muted-foreground',
+    },
+    {
+      to: '/questions',
+      icon: History,
+      label: t('dashboard.myQuestions'),
+      color: 'bg-muted text-muted-foreground',
+    },
+  ];
  
    return (
      <div className="p-4 space-y-6">
@@ -70,7 +85,26 @@
              </Link>
            );
          })}
-       </div>
+        </div>
+
+        {/* More Actions */}
+        <div className="grid grid-cols-2 gap-3">
+          {moreActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link key={action.to} to={action.to}>
+                <Card className="p-3 flex items-center gap-3 hover:shadow-md transition-shadow">
+                  <div
+                    className={`w-10 h-10 rounded-full ${action.color} flex items-center justify-center flex-shrink-0`}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm font-medium">{action.label}</span>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
  
        {/* Daily Tip */}
        <Card className="bg-primary/5 border-primary/20">
