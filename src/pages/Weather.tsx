@@ -9,6 +9,13 @@ const Weather = () => {
   const { language, t } = useLanguage();
   const { weather, loading, error, userLocation, detectLocation, refresh } = useWeather();
 
+  // Safe accessor for multilingual alert fields
+  const getAlertText = (field: Record<string, string> | string | undefined, fallback: string = ''): string => {
+    if (!field) return fallback;
+    if (typeof field === 'string') return field;
+    return field[language as Language] || field.en || fallback;
+  };
+
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'danger':
@@ -161,21 +168,21 @@ const Weather = () => {
         <div>
           <h2 className="font-semibold text-foreground mb-3">{t('weather.alerts')}</h2>
           <div className="space-y-3">
-            {weather.alerts.map((alert) => (
-              <Card key={alert.id} className={`p-4 ${getAlertStyles(alert.type)}`}>
+            {weather.alerts.map((alert, idx) => (
+              <Card key={alert.id || idx} className={`p-4 ${getAlertStyles(alert.type || 'info')}`}>
                 <div className="flex gap-3">
                   <div className="flex-shrink-0 mt-0.5 text-foreground">
-                    {getAlertIcon(alert.type)}
+                    {getAlertIcon(alert.type || 'info')}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-foreground">
-                      {alert.title[language as Language] || alert.title.en}
+                      {getAlertText(alert.title, 'Weather Alert')}
                     </h4>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {alert.message[language as Language] || alert.message.en}
+                      {getAlertText(alert.message, 'Check weather conditions')}
                     </p>
                     <p className="text-sm font-medium text-primary mt-2">
-                      👉 {alert.action[language as Language] || alert.action.en}
+                      👉 {getAlertText(alert.action, 'Stay prepared')}
                     </p>
                   </div>
                 </div>

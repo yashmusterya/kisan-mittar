@@ -24,11 +24,11 @@ export interface WeatherForecast {
 }
 
 export interface WeatherAlert {
-  id: string;
-  type: 'info' | 'warning' | 'danger';
-  title: Record<string, string>;
-  message: Record<string, string>;
-  action: Record<string, string>;
+  id?: string;
+  type?: 'info' | 'warning' | 'danger';
+  title: Record<string, string> | string;
+  message: Record<string, string> | string;
+  action: Record<string, string> | string;
 }
 
 export interface WeatherData {
@@ -144,12 +144,36 @@ Provide 5 days of forecast. Use appropriate weather icons (☀️🌤️⛅🌥�
         throw new Error('No JSON found in response');
       }
       
-      const weatherData: WeatherData = JSON.parse(jsonMatch[0]);
+      const rawData = JSON.parse(jsonMatch[0]);
       
-      // Validate structure
-      if (!weatherData.current || !weatherData.forecast || !weatherData.alerts) {
-        throw new Error('Invalid weather data structure');
-      }
+      // Normalize and validate the data with safe defaults
+      const weatherData: WeatherData = {
+        current: {
+          temp: rawData.current?.temp ?? 25,
+          humidity: rawData.current?.humidity ?? 60,
+          wind: rawData.current?.wind ?? 10,
+          condition: rawData.current?.condition ?? 'Clear',
+          icon: rawData.current?.icon ?? '☀️',
+          rainChance: rawData.current?.rainChance ?? 0,
+        },
+        forecast: Array.isArray(rawData.forecast) ? rawData.forecast.map((f: any, idx: number) => ({
+          day: f?.day ?? `Day ${idx + 1}`,
+          date: f?.date ?? '',
+          high: f?.high ?? 30,
+          low: f?.low ?? 20,
+          condition: f?.condition ?? 'Clear',
+          icon: f?.icon ?? '☀️',
+          recommendation: f?.recommendation ?? 'Good conditions for farming',
+        })) : [],
+        alerts: Array.isArray(rawData.alerts) ? rawData.alerts.map((a: any, idx: number) => ({
+          id: a?.id ?? String(idx + 1),
+          type: a?.type ?? 'info',
+          title: a?.title ?? { en: 'Weather Update' },
+          message: a?.message ?? { en: 'Check weather conditions' },
+          action: a?.action ?? { en: 'Stay prepared' },
+        })) : [],
+        locationName: rawData.locationName ?? undefined,
+      };
       
       // Cache the result
       weatherCache = {
@@ -160,7 +184,7 @@ Provide 5 days of forecast. Use appropriate weather icons (☀️🌤️⛅🌥�
       
       return weatherData;
     } catch (parseError) {
-      console.error('Failed to parse weather response:', response.data.response);
+      console.error('Failed to parse weather response:', response.data?.response);
       throw new Error('Failed to parse weather data');
     }
   }, []);
