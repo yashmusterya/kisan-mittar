@@ -23,6 +23,28 @@ interface Message {
 const CACHE_KEY = 'kisaanmitra_ai_cache';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
+// Strip markdown for TTS
+const stripMarkdown = (text: string): string => {
+  return text
+    .replace(/#{1,6}\s*/g, '') // Remove headings
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
+    .replace(/\*([^*]+)\*/g, '$1') // Remove italic
+    .replace(/__([^_]+)__/g, '$1') // Remove bold (underscore)
+    .replace(/_([^_]+)_/g, '$1') // Remove italic (underscore)
+    .replace(/~~([^~]+)~~/g, '$1') // Remove strikethrough
+    .replace(/`([^`]+)`/g, '$1') // Remove inline code
+    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1') // Remove images, keep alt
+    .replace(/^[-*+]\s+/gm, '') // Remove unordered list markers
+    .replace(/^\d+\.\s+/gm, '') // Remove ordered list markers
+    .replace(/^>\s+/gm, '') // Remove blockquotes
+    .replace(/\|/g, ', ') // Replace table pipes
+    .replace(/---+/g, '') // Remove horizontal rules
+    .replace(/\n{3,}/g, '\n\n') // Normalize multiple newlines
+    .trim();
+};
+
 interface CacheEntry {
   response: string;
   timestamp: number;
@@ -152,9 +174,9 @@ const Chat = () => {
         setMessages((prev) => [...prev, { id: aiMsgId, role: 'assistant', content: cachedResponse }]);
         setLoading(false);
         
-        // Speak the cached response
+        // Speak the cached response (stripped of markdown)
         if (voiceEnabled && ttsSupported) {
-          speak(cachedResponse);
+          speak(stripMarkdown(cachedResponse));
         }
         return;
       }
@@ -194,9 +216,9 @@ const Chat = () => {
       const aiMsgId = (Date.now() + 1).toString();
       setMessages((prev) => [...prev, { id: aiMsgId, role: 'assistant', content: aiResponse }]);
 
-      // Speak the response
+      // Speak the response (stripped of markdown)
       if (voiceEnabled && ttsSupported) {
-        speak(aiResponse);
+        speak(stripMarkdown(aiResponse));
       }
 
     } catch (error) {
